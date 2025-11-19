@@ -30,7 +30,7 @@
 
         <!-- Activity de Login (LAUNCHER) -->
         <activity
-            android:name=".LoginActivity"
+            android:name="com.cepa.parqueo.LoginActivity"
             android:exported="true"
             android:screenOrientation="portrait">
             <intent-filter>
@@ -41,25 +41,25 @@
 
         <!-- Activity Home -->
         <activity
-            android:name=".HomeActivity"
+            android:name="com.cepa.parqueo.HomeActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
         <!-- Activity Ingreso Vehículo -->
         <activity
-            android:name=".IngresoVehiculoActivity"
+            android:name="com.cepa.parqueo.IngresoVehiculoActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
         <!-- Activity Salida Vehículo -->
         <activity
-            android:name=".SalidaVehiculoActivity"
+            android:name="com.cepa.parqueo.SalidaVehiculoActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
         <!-- Activity Mantenimiento -->
         <activity
-            android:name=".MantenimientoActivity"
+            android:name="com.cepa.parqueo.MantenimientoActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
@@ -72,13 +72,13 @@
 
         <!-- Activity Confirmación de Salida -->
         <activity
-            android:name=".SalidaConfirmacionActivity"
+            android:name="com.cepa.parqueo.SalidaConfirmacionActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
         <!-- Activity Gestión de Usuarios -->
         <activity
-            android:name=".GestionUsuariosActivity"
+            android:name="com.cepa.parqueo.GestionUsuariosActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
     </application>

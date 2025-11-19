@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.parking.system"
+    namespace = "com.cepa.parqueo"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.parking.system"
+        applicationId = "com.cepa.parqueo"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
