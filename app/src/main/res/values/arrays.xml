@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="tipos_usuario">
+        <item>OPERADOR</item>
+        <item>ADMINISTRADOR</item>
+        <item>CAJA</item>
+    </string-array>
+
+    <string-array name="tipos_dispositivo">
+        <item>MIXTO</item>
+        <item>ENTRADA</item>
+        <item>SALIDA</item>
+    </string-array>
+</resources>
