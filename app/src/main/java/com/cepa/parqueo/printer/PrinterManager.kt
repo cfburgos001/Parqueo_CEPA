@@ -80,7 +80,7 @@ object PrinterManager {
         // Encabezado
         out.write(byteArrayOf(0x1B, 0x61, 0x01)) // Centrar
         out.write(byteArrayOf(0x1B, 0x45, 0x01)) // Negrita
-        out.write("CENTRO PANAMERICANO DE OJOS\n".utf8())
+        out.write("CEPA\n".utf8())
         out.write("TICKET DE INGRESO\n".utf8())
         out.write(byteArrayOf(0x1B, 0x45, 0x00))
         out.write("============================\n".utf8())
@@ -160,7 +160,7 @@ object PrinterManager {
     private fun buildReceiptText(data: ReceiptData): String {
         val dateFormatter = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
         return buildString {
-            appendLine("CENTRO PANAMERICANO DE OJOS")
+            appendLine("CEPA")
             appendLine("TICKET DE INGRESO")
             appendLine("========================")
             appendLine()

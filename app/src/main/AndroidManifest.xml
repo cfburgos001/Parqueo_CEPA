@@ -5,9 +5,6 @@
     <!-- Permisos necesarios -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" />
-
-    <!-- Permisos deINTERNET -->
-    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!-- Permisos Bluetooth -->
@@ -57,22 +54,21 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <!-- Activity Mantenimiento -->
+        <!-- ⭐ NUEVA: Activity Pago Vehículo -->
         <activity
-            android:name="com.cepa.parqueo.MantenimientoActivity"
+            android:name="com.cepa.parqueo.PagoVehiculoActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
-
-        <!-- Activity del escáner QR de ZXing -->
-        <activity
-            android:name="com.journeyapps.barcodescanner.CaptureActivity"
-            android:screenOrientation="portrait"
-            tools:replace="screenOrientation" />
-
 
         <!-- Activity Confirmación de Salida -->
         <activity
             android:name="com.cepa.parqueo.SalidaConfirmacionActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Activity Mantenimiento -->
+        <activity
+            android:name="com.cepa.parqueo.MantenimientoActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
@@ -81,6 +77,12 @@
             android:name="com.cepa.parqueo.GestionUsuariosActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
+
+        <!-- Activity del escáner QR de ZXing -->
+        <activity
+            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+            android:screenOrientation="portrait"
+            tools:replace="screenOrientation" />
     </application>
 
 </manifest>

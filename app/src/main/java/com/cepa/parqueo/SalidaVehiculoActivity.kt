@@ -3,19 +3,22 @@ package com.cepa.parqueo
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
-import com.google.zxing.integration.android.IntentIntegrator
 import com.cepa.parqueo.database.DispositivoManager
 import com.cepa.parqueo.database.VehiculoDB
 import com.cepa.parqueo.database.VehiculoRepository
 import com.cepa.parqueo.database.VehiculoResult
 import com.cepa.parqueo.databinding.ActivitySalidaVehiculoBinding
+import com.google.zxing.integration.android.IntentIntegrator
 import kotlinx.coroutines.launch
 import java.util.Date
 
+/**
+ * Activity para registrar salida de vehículos
+ * ACTUALIZADO: Integra flujo de cobro desde la app
+ */
 class SalidaVehiculoActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySalidaVehiculoBinding
@@ -38,7 +41,7 @@ class SalidaVehiculoActivity : AppCompatActivity() {
         if (!dispositivoManager.puedeRegistrarSalida()) {
             Toast.makeText(
                 this,
-                "Este dispositivo esta configurado como ENTRADA. No puede registrar salidas",
+                "⚠ Este dispositivo está configurado como ENTRADA\nNo puede registrar salidas",
                 Toast.LENGTH_LONG
             ).show()
 
@@ -78,12 +81,12 @@ class SalidaVehiculoActivity : AppCompatActivity() {
         val placa = binding.etPlaca.text.toString().trim()
 
         if (placa.isEmpty()) {
-            binding.tilPlaca.error = "Ingrese la placa del vehiculo"
+            binding.tilPlaca.error = "Ingrese la placa del vehículo"
             return
         }
 
         if (placa.length < 4) {
-            binding.tilPlaca.error = "Placa invalida"
+            binding.tilPlaca.error = "Placa inválida"
             return
         }
 
@@ -101,7 +104,7 @@ class SalidaVehiculoActivity : AppCompatActivity() {
                 is VehiculoResult.NotFound -> {
                     Toast.makeText(
                         this@SalidaVehiculoActivity,
-                        "Vehiculo no encontrado o ya salio del parqueo",
+                        "⚠ Vehículo no encontrado o ya salió del parqueo",
                         Toast.LENGTH_LONG
                     ).show()
                     binding.btnRegistrarPorPlaca.isEnabled = true
@@ -109,7 +112,7 @@ class SalidaVehiculoActivity : AppCompatActivity() {
                 is VehiculoResult.Error -> {
                     Toast.makeText(
                         this@SalidaVehiculoActivity,
-                        "Error: ${result.message}",
+                        "✗ Error: ${result.message}",
                         Toast.LENGTH_LONG
                     ).show()
                     binding.btnRegistrarPorPlaca.isEnabled = true
@@ -127,14 +130,14 @@ class SalidaVehiculoActivity : AppCompatActivity() {
                 is VehiculoResult.NotFound -> {
                     Toast.makeText(
                         this@SalidaVehiculoActivity,
-                        "Ticket no encontrado o vehiculo ya salio",
+                        "⚠ Ticket no encontrado o vehículo ya salió",
                         Toast.LENGTH_LONG
                     ).show()
                 }
                 is VehiculoResult.Error -> {
                     Toast.makeText(
                         this@SalidaVehiculoActivity,
-                        "Error: ${result.message}",
+                        "✗ Error: ${result.message}",
                         Toast.LENGTH_LONG
                     ).show()
                 }
@@ -142,51 +145,56 @@ class SalidaVehiculoActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * ⭐ NUEVA LÓGICA: Evaluar si el vehículo necesita pagar
+     * - Si no ha pagado (bitPaid = 0) → Ir a pantalla de pago
+     * - Si ya pagó (bitPaid = 1) → Ir directo a confirmación de salida
+     */
     private fun procesarVehiculo(vehiculo: VehiculoDB) {
         android.util.Log.d("SalidaVehiculo", "=== DATOS DEL VEHÍCULO ===")
         android.util.Log.d("SalidaVehiculo", "Placa: ${vehiculo.placa}")
         android.util.Log.d("SalidaVehiculo", "bitPaid: ${vehiculo.bitPaid}")
         android.util.Log.d("SalidaVehiculo", "Monto: ${vehiculo.monto}")
+        android.util.Log.d("SalidaVehiculo", "FechaPago: ${vehiculo.fechaPago}")
         android.util.Log.d("SalidaVehiculo", "========================")
 
-        // ⭐ SOLO VERIFICAR bitPaid - No calcular nada
-        if (vehiculo.bitPaid != 1) {
-            // NO HA PAGADO - Mostrar alerta
-            mostrarAlertaNoPagado(vehiculo)
-            binding.btnRegistrarPorPlaca.isEnabled = true
-            return
-        }
-
-        // YA PAGÓ (bitPaid == 1) - Proceder a confirmación
-        abrirConfirmacionSalida(vehiculo)
-    }
-
-    private fun mostrarAlertaNoPagado(vehiculo: VehiculoDB) {
-        val mensaje = buildString {
-            append("⚠️ PAGO PENDIENTE\n\n")
-            append("Este vehículo NO ha pagado el ticket.\n\n")
-            append("📋 Información:\n")
-            append("Placa: ${vehiculo.placa}\n")
-            append("Monto en BD: $${String.format("%.2f", vehiculo.monto)}\n")
-            append("Estado bitPaid: ${vehiculo.bitPaid}\n\n")
-            append("❌ El cliente debe ir a PayStation para pagar antes de salir.")
-        }
-
-        AlertDialog.Builder(this)
-            .setTitle("Pago Pendiente")
-            .setMessage(mensaje)
-            .setPositiveButton("Entendido") { dialog, _ ->
-                dialog.dismiss()
-                binding.etPlaca.text?.clear()
-            }
-            .setCancelable(false)
-            .show()
-    }
-
-    private fun abrirConfirmacionSalida(vehiculo: VehiculoDB) {
         val ahora = Date()
         val tiempoMinutos = ((ahora.time - vehiculo.fechaEntrada.time) / 60000).toInt()
 
+        // Evaluar estado de pago
+        if (vehiculo.bitPaid != 1) {
+            // ❌ NO HA PAGADO - Ir a pantalla de pago
+            abrirPantallaPago(vehiculo, tiempoMinutos)
+        } else {
+            // ✓ YA PAGÓ - Ir directo a confirmación de salida
+            // (La confirmación evaluará el tiempo de gracia)
+            abrirConfirmacionSalida(vehiculo, tiempoMinutos)
+        }
+
+        binding.btnRegistrarPorPlaca.isEnabled = true
+    }
+
+    /**
+     * ⭐ NUEVO: Abre pantalla de pago
+     */
+    private fun abrirPantallaPago(vehiculo: VehiculoDB, tiempoMinutos: Int) {
+        val intent = Intent(this, PagoVehiculoActivity::class.java)
+        intent.putExtra("VEHICULO_ID", vehiculo.id)
+        intent.putExtra("VEHICULO_PLACA", vehiculo.placa)
+        intent.putExtra("VEHICULO_FECHA", vehiculo.fechaEntrada.time)
+        intent.putExtra("VEHICULO_CODIGO", vehiculo.codigoBarras)
+        intent.putExtra("BIT_PAID", vehiculo.bitPaid)
+        intent.putExtra("MONTO", vehiculo.monto)
+        intent.putExtra("FECHA_PAGO", vehiculo.fechaPago?.time ?: 0L)
+        intent.putExtra("TIEMPO_MINUTOS", tiempoMinutos)
+
+        startActivityForResult(intent, REQUEST_CODE_PAGO)
+    }
+
+    /**
+     * Abre confirmación de salida (para vehículos que ya pagaron)
+     */
+    private fun abrirConfirmacionSalida(vehiculo: VehiculoDB, tiempoMinutos: Int) {
         val intent = Intent(this, SalidaConfirmacionActivity::class.java)
         intent.putExtra("VEHICULO_ID", vehiculo.id)
         intent.putExtra("VEHICULO_PLACA", vehiculo.placa)
@@ -199,7 +207,6 @@ class SalidaVehiculoActivity : AppCompatActivity() {
         intent.putExtra("TIEMPO_ESTANCIA", vehiculo.tiempoEstancia)
 
         startActivityForResult(intent, REQUEST_CODE_CONFIRMACION)
-        binding.btnRegistrarPorPlaca.isEnabled = true
     }
 
     private fun iniciarEscaner() {
@@ -208,7 +215,7 @@ class SalidaVehiculoActivity : AppCompatActivity() {
             IntentIntegrator.QR_CODE,
             IntentIntegrator.CODE_128
         )
-        integrator.setPrompt("Escanee el codigo del ticket")
+        integrator.setPrompt("Escanee el código del ticket")
         integrator.setCameraId(0)
         integrator.setBeepEnabled(true)
         integrator.setBarcodeImageEnabled(true)
@@ -217,7 +224,8 @@ class SalidaVehiculoActivity : AppCompatActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == REQUEST_CODE_CONFIRMACION) {
+        // Limpiar placa después de pago o confirmación
+        if (requestCode == REQUEST_CODE_PAGO || requestCode == REQUEST_CODE_CONFIRMACION) {
             binding.etPlaca.text?.clear()
             binding.btnRegistrarPorPlaca.isEnabled = true
             return
@@ -233,7 +241,7 @@ class SalidaVehiculoActivity : AppCompatActivity() {
 
                 Toast.makeText(
                     this,
-                    "Codigo escaneado: $codigoEscaneado",
+                    "Código escaneado: $codigoEscaneado",
                     Toast.LENGTH_SHORT
                 ).show()
 
@@ -254,6 +262,7 @@ class SalidaVehiculoActivity : AppCompatActivity() {
     }
 
     companion object {
-        private const val REQUEST_CODE_CONFIRMACION = 100
+        private const val REQUEST_CODE_PAGO = 100
+        private const val REQUEST_CODE_CONFIRMACION = 101
     }
 }

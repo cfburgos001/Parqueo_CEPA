@@ -18,6 +18,10 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/**
+ * Activity para confirmar y ejecutar la salida del vehículo
+ * SIMPLIFICADO: El pago ya se procesó antes, aquí solo validamos tiempo de gracia
+ */
 class SalidaConfirmacionActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySalidaConfirmacionBinding
@@ -32,7 +36,7 @@ class SalidaConfirmacionActivity : AppCompatActivity() {
     private lateinit var dispositivoManager: DispositivoManager
     private var idDispositivo: String = ""
     private var tiempoGraciaConfigurado: Int = 15
-    private var estaFueraDeGracia: Boolean = false // ⭐ Nueva variable para saber el estado
+    private var estaFueraDeGracia: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,9 +48,11 @@ class SalidaConfirmacionActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             idDispositivo = dispositivoManager.obtenerIdDispositivo()
-            // Cargar tiempo de gracia desde BD
-            tiempoGraciaConfigurado = ParkingConfigHelper.obtenerTiempoGracia(this@SalidaConfirmacionActivity, idDispositivo)
-            Log.d("SalidaConfirmacion", "Tiempo de gracia configurado: $tiempoGraciaConfigurado minutos")
+            tiempoGraciaConfigurado = ParkingConfigHelper.obtenerTiempoGracia(
+                this@SalidaConfirmacionActivity,
+                idDispositivo
+            )
+            Log.d("SalidaConfirmacion", "Tiempo de gracia: $tiempoGraciaConfigurado min")
         }
 
         cargarDatosIntent()
@@ -94,13 +100,6 @@ class SalidaConfirmacionActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Obtiene el tiempo de gracia configurado (cargado en onCreate desde BD)
-     */
-    private fun obtenerTiempoGraciaConfigurado(): Int {
-        return tiempoGraciaConfigurado
-    }
-
     private fun mostrarInformacion() {
         val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
 
@@ -114,7 +113,7 @@ class SalidaConfirmacionActivity : AppCompatActivity() {
         if (fechaPago != null) {
             binding.tvHoraPago.text = dateFormat.format(fechaPago)
         } else {
-            binding.tvHoraPago.text = "No registrada"
+            binding.tvHoraPago.text = "Sin pago registrado"
         }
 
         // Hora de salida (ahora)
@@ -131,18 +130,11 @@ class SalidaConfirmacionActivity : AppCompatActivity() {
         }
         binding.tvTiempoEstancia.text = tiempoTexto
 
-        // ⭐ LÓGICA PRINCIPAL: Determinar el estado
-        if (bitPaid == 0) {
-            // ❌ NO HA PAGADO
-            mostrarEstadoNoPagado()
-        } else if (fechaPago != null) {
-            // ✓ HA PAGADO - Verificar tiempo de gracia
+        // ⭐ LÓGICA SIMPLIFICADA: Solo evaluar tiempo de gracia
+        if (bitPaid == 1 && fechaPago != null) {
+            // Vehículo pagó - Evaluar tiempo de gracia
             val tiempoGraciaMinutos = ((horaSalida.time - fechaPago!!.time) / 60000).toInt()
 
-            // Obtener límite configurado
-            val limiteGracia = obtenerTiempoGraciaConfigurado()
-
-            // Mostrar tiempo de gracia
             val graciaHoras = tiempoGraciaMinutos / 60
             val graciaMinutos = tiempoGraciaMinutos % 60
             val graciaTexto = if (graciaHoras > 0) {
@@ -152,19 +144,21 @@ class SalidaConfirmacionActivity : AppCompatActivity() {
             }
             binding.tvTiempoGracia.text = graciaTexto
 
+            val limiteGracia = tiempoGraciaConfigurado
+
             if (tiempoGraciaMinutos <= limiteGracia) {
-                // ✓ DENTRO DEL TIEMPO DE GRACIA (≤ límite configurado)
+                // ✓ DENTRO DE GRACIA
                 estaFueraDeGracia = false
                 mostrarEstadoDentroGracia()
             } else {
-                // ⚠ FUERA DEL TIEMPO DE GRACIA (> límite configurado)
+                // ⚠ FUERA DE GRACIA
                 estaFueraDeGracia = true
                 mostrarEstadoFueraGracia()
             }
         } else {
-            // ✓ HA PAGADO pero no hay fecha de pago registrada
+            // Sin pago (no debería llegar aquí, pero por seguridad)
             binding.tvTiempoGracia.text = "N/A"
-            mostrarEstadoDentroGracia()
+            mostrarEstadoError()
         }
 
         // Monto
@@ -172,75 +166,76 @@ class SalidaConfirmacionActivity : AppCompatActivity() {
     }
 
     /**
-     * ✓ ESTADO: Dentro del tiempo de gracia (≤ 15 minutos)
-     * - Card verde
-     * - Mensaje azul: "✓ Proceda a validar la salida"
-     * - Botón VALIDAR habilitado
+     * ✓ DENTRO DE GRACIA: Verde, puede salir
      */
     private fun mostrarEstadoDentroGracia() {
-        // Card verde
-        binding.cardMonto.setCardBackgroundColor(ContextCompat.getColor(this, android.R.color.holo_green_dark))
-        binding.tvTituloMonto.text = "MONTO PAGADO"
+        binding.cardMonto.setCardBackgroundColor(
+            ContextCompat.getColor(this, android.R.color.holo_green_dark)
+        )
+        binding.tvTituloMonto.text = "PAGO CONFIRMADO"
 
-        // Mensaje azul
         binding.tvMensajeEstado.visibility = View.VISIBLE
-        binding.tvMensajeEstado.text = "✓ Proceda a validar la salida"
-        binding.tvMensajeEstado.setTextColor(ContextCompat.getColor(this, android.R.color.holo_blue_dark))
-        binding.tvMensajeEstado.setBackgroundColor(ContextCompat.getColor(this, android.R.color.transparent))
+        binding.tvMensajeEstado.text = "✓ Vehículo dentro del tiempo de gracia\nPuede proceder a validar la salida"
+        binding.tvMensajeEstado.setTextColor(
+            ContextCompat.getColor(this, android.R.color.holo_green_dark)
+        )
+        binding.tvMensajeEstado.setBackgroundColor(
+            ContextCompat.getColor(this, android.R.color.transparent)
+        )
 
-        // Botón VALIDAR habilitado
         binding.btnConfirmar.isEnabled = true
         binding.btnConfirmar.alpha = 1f
+        binding.btnConfirmar.text = "VALIDAR Y ABRIR PLUMA"
     }
 
     /**
-     * ⚠ ESTADO: Fuera del tiempo de gracia (> 15 minutos)
-     * - Card naranja
-     * - Mensaje naranja: "⚠ Ticket fuera de tiempo de gracia"
-     * - Botón VALIDAR habilitado PERO registra salida y reingreso
+     * ⚠ FUERA DE GRACIA: Naranja, debe volver a pagar
      */
     private fun mostrarEstadoFueraGracia() {
-        // Card naranja
-        binding.cardMonto.setCardBackgroundColor(ContextCompat.getColor(this, android.R.color.holo_orange_dark))
-        binding.tvTituloMonto.text = "EXCEDIÓ TIEMPO DE GRACIA"
+        binding.cardMonto.setCardBackgroundColor(
+            ContextCompat.getColor(this, android.R.color.holo_orange_dark)
+        )
+        binding.tvTituloMonto.text = "TIEMPO DE GRACIA EXCEDIDO"
 
-        // Mensaje naranja sobre fondo naranja oscuro
         binding.tvMensajeEstado.visibility = View.VISIBLE
-        binding.tvMensajeEstado.text = "⚠ Ticket fuera de tiempo de gracia\nPasar a estación de pago"
-        binding.tvMensajeEstado.setTextColor(ContextCompat.getColor(this, android.R.color.holo_orange_light))
-        binding.tvMensajeEstado.setBackgroundColor(ContextCompat.getColor(this, android.R.color.holo_orange_dark))
+        binding.tvMensajeEstado.text =
+            "⚠ El vehículo excedió el tiempo de gracia\n" +
+                    "Se registrará salida y nuevo ingreso\n" +
+                    "Debe pagar periodo adicional en siguiente validación"
+        binding.tvMensajeEstado.setTextColor(
+            ContextCompat.getColor(this, android.R.color.holo_orange_light)
+        )
+        binding.tvMensajeEstado.setBackgroundColor(
+            ContextCompat.getColor(this, android.R.color.holo_orange_dark)
+        )
         binding.tvMensajeEstado.setPadding(16, 16, 16, 16)
 
-        // ⭐ Botón VALIDAR habilitado (pero tendrá comportamiento especial)
         binding.btnConfirmar.isEnabled = true
         binding.btnConfirmar.alpha = 1f
-        binding.btnConfirmar.text = "REGISTRAR EXCESO"
+        binding.btnConfirmar.text = "REGISTRAR EXCESO (NO ABRE PLUMA)"
     }
 
     /**
-     * ❌ ESTADO: No ha pagado (bitPaid = 0)
-     * - Card rojo
-     * - Mensaje blanco sobre rojo: "⚠️ NO HA PAGADO"
-     * - Botón VALIDAR deshabilitado
+     * ❌ ERROR: No debería estar aquí sin pago
      */
-    private fun mostrarEstadoNoPagado() {
-        // Card rojo
-        binding.cardMonto.setCardBackgroundColor(ContextCompat.getColor(this, android.R.color.holo_red_dark))
-        binding.tvTituloMonto.text = "⚠️ NO HA PAGADO"
+    private fun mostrarEstadoError() {
+        binding.cardMonto.setCardBackgroundColor(
+            ContextCompat.getColor(this, android.R.color.holo_red_dark)
+        )
+        binding.tvTituloMonto.text = "ERROR"
 
-        // Mensaje blanco sobre rojo
         binding.tvMensajeEstado.visibility = View.VISIBLE
-        binding.tvMensajeEstado.text = "❌ Debe pagar en estación de pago"
-        binding.tvMensajeEstado.setTextColor(ContextCompat.getColor(this, android.R.color.white))
-        binding.tvMensajeEstado.setBackgroundColor(ContextCompat.getColor(this, android.R.color.holo_red_dark))
+        binding.tvMensajeEstado.text = "❌ El vehículo debe realizar el pago primero"
+        binding.tvMensajeEstado.setTextColor(
+            ContextCompat.getColor(this, android.R.color.white)
+        )
+        binding.tvMensajeEstado.setBackgroundColor(
+            ContextCompat.getColor(this, android.R.color.holo_red_dark)
+        )
         binding.tvMensajeEstado.setPadding(16, 16, 16, 16)
 
-        // Botón VALIDAR deshabilitado
         binding.btnConfirmar.isEnabled = false
         binding.btnConfirmar.alpha = 0.5f
-
-        // Tiempo de gracia N/A
-        binding.tvTiempoGracia.text = "N/A"
     }
 
     private fun confirmarSalida() {
@@ -271,7 +266,7 @@ class SalidaConfirmacionActivity : AppCompatActivity() {
                         // NO levantar pluma (bitExit = 0)
                         Toast.makeText(
                             this@SalidaConfirmacionActivity,
-                            "🚫 PLUMA NO SE LEVANTA\nDebe pagar en PayStation",
+                            "🚫 PLUMA NO SE LEVANTA\nDebe realizar nuevo pago",
                             Toast.LENGTH_LONG
                         ).show()
 
