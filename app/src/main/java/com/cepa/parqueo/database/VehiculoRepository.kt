@@ -105,6 +105,7 @@ class VehiculoRepository(private val context: Context) {
                     return@withContext RegistroEntradaResult.Error("No se pudo conectar a la base de datos")
                 }
 
+                // El SP obtiene IdEntryDevice automáticamente desde IOT_Dispositivos
                 val sql = "{CALL dbo.IOT_sp_RegistrarEntrada(?, ?, ?, ?)}"
                 val callableStatement = connection.prepareCall(sql)
 
@@ -148,7 +149,6 @@ class VehiculoRepository(private val context: Context) {
             }
         }
     }
-
     /**
      * Busca un vehículo por placa en IOT_Vehiculos
      */
@@ -310,28 +310,49 @@ class VehiculoRepository(private val context: Context) {
                     return@withContext SalidaResult.Error("No se pudo conectar a la base de datos")
                 }
 
-                val sql = "{CALL dbo.IOT_sp_RegistrarSalida(?, ?)}"
-                val callableStatement = connection.prepareCall(sql)
+                // Obtener IdExitDevice desde IOT_Dispositivos
+                val sqlGetId = """
+                SELECT TOP 1 ISNULL(IdExitDevice, 2) AS IdExitDevice
+                FROM IOT_Dispositivos
+                WHERE IdDispositivo = ?
+            """
 
-                callableStatement.setString(1, placa)
-                callableStatement.setString(2, idDispositivo)
+                val stmtGetId = connection.prepareStatement(sqlGetId)
+                stmtGetId.setString(1, idDispositivo)
+                val rsId = stmtGetId.executeQuery()
 
-                val resultSet = callableStatement.executeQuery()
-
-                var filasAfectadas = 0
-                var idDispositivoSalida = ""
-
-                if (resultSet.next()) {
-                    filasAfectadas = resultSet.getInt("FilasAfectadas")
-                    idDispositivoSalida = resultSet.getString("IdDispositivoSalida") ?: ""
+                var idExitDevice = 2 // Default
+                if (rsId.next()) {
+                    idExitDevice = rsId.getInt("IdExitDevice")
                 }
+                rsId.close()
+                stmtGetId.close()
 
-                resultSet.close()
-                callableStatement.close()
+                // Actualizar salida
+                val sql = """
+                UPDATE dbo.IOT_Vehiculos
+                SET 
+                    FechaSalida = GETDATE(),
+                    TiempoEstancia = DATEDIFF(MINUTE, FechaEntrada, GETDATE()),
+                    Estado = 'SALIO',
+                    IdDispositivoSalida = ?,
+                    IdExitDevice = ?,
+                    bitExit = 1
+                WHERE Placa = ? 
+                  AND Estado = 'DENTRO'
+            """
+
+                val preparedStatement = connection.prepareStatement(sql)
+                preparedStatement.setString(1, idDispositivo)
+                preparedStatement.setInt(2, idExitDevice)
+                preparedStatement.setString(3, placa)
+
+                val filasAfectadas = preparedStatement.executeUpdate()
+                preparedStatement.close()
 
                 if (filasAfectadas > 0) {
-                    Log.d(TAG, "✓ Salida registrada - Placa: $placa, IdDispositivoSalida: $idDispositivoSalida")
-                    SalidaResult.Success("Salida registrada correctamente", idDispositivoSalida)
+                    Log.d(TAG, "✓ Salida registrada - Placa: $placa, IdExitDevice: $idExitDevice")
+                    SalidaResult.Success("Salida registrada correctamente", idDispositivo)
                 } else {
                     Log.d(TAG, "✗ No se encontró vehículo para salida: $placa")
                     SalidaResult.Error("No se encontró el vehículo en el sistema")
@@ -458,18 +479,23 @@ class VehiculoRepository(private val context: Context) {
                 }
 
                 val sql = """
-                    SELECT TOP 1 PrecioPorHora, PrecioMinimo, strRateKey
-                    FROM dbo.IOT_Tarifas 
-                    WHERE Activa = 1
-                """
+                SELECT TOP 1 
+                    ISNULL(Precio1Hora, 1.25) as Precio1Hora,
+                    ISNULL(Precio2Horas, 2.50) as Precio2Horas,
+                    ISNULL(PrecioDiaCompleto, 3.75) as PrecioDiaCompleto,
+                    ISNULL(strRateKey, 'A') as strRateKey
+                FROM dbo.IOT_Tarifas 
+                WHERE Activa = 1
+            """
 
                 val statement = connection.createStatement()
                 val resultSet = statement.executeQuery(sql)
 
                 if (resultSet.next()) {
                     val tarifa = Tarifa(
-                        precioPorHora = resultSet.getDouble("PrecioPorHora"),
-                        precioMinimo = resultSet.getDouble("PrecioMinimo"),
+                        precio1Hora = resultSet.getDouble("Precio1Hora"),
+                        precio2Horas = resultSet.getDouble("Precio2Horas"),
+                        precioDiaCompleto = resultSet.getDouble("PrecioDiaCompleto"),
                         strRateKey = resultSet.getString("strRateKey") ?: "A"
                     )
 
@@ -481,12 +507,13 @@ class VehiculoRepository(private val context: Context) {
                     resultSet.close()
                     statement.close()
 
-                    TarifaResult.Success(Tarifa(1.50, 1.50, "A"))
+                    // Valores por defecto
+                    TarifaResult.Success(Tarifa())
                 }
 
             } catch (e: Exception) {
                 Log.e(TAG, "Error al obtener tarifa", e)
-                TarifaResult.Success(Tarifa(1.50, 1.50, "A"))
+                TarifaResult.Success(Tarifa())
             } finally {
                 dbHelper.closeConnection(connection)
             }
@@ -608,10 +635,18 @@ data class CalculoMonto(
  * Clase de datos para tarifa
  */
 data class Tarifa(
-    val precioPorHora: Double,
-    val precioMinimo: Double,
+    val precio1Hora: Double = 1.25,
+    val precio2Horas: Double = 2.50,
+    val precioDiaCompleto: Double = 3.75,
     val strRateKey: String = "A"
-)
+) {
+    // Precio por hora para compatibilidad
+    val precioPorHora: Double
+        get() = precio1Hora
+
+    val precioMinimo: Double
+        get() = precio1Hora
+}
 
 // ===== SEALED CLASSES PARA RESULTADOS =====
 

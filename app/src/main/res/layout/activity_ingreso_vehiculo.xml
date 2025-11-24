@@ -44,7 +44,7 @@
                 android:id="@+id/tilPlaca"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Placa del Carro"
+                android:hint="Placa del Vehículo"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_marginBottom="24dp">
 

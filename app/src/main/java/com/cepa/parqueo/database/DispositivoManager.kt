@@ -9,7 +9,7 @@ import java.sql.Connection
 
 /**
  * Manager para gestión de dispositivos (Terminales POS)
- * Actualizado para usar IOT_Dispositivos
+ * Actualizado para usar IOT_Dispositivos con IdEntryDevice e IdExitDevice configurables
  */
 class DispositivoManager(private val context: Context) {
 
@@ -76,26 +76,58 @@ class DispositivoManager(private val context: Context) {
     }
 
     /**
-     * Obtiene el ID del dispositivo para entrada (IdEntryDevice)
-     * Según el tipo de dispositivo configurado
+     * ⭐ NUEVO: Configura el ID de entrada (IdEntryDevice)
+     */
+    fun configurarIdEntryDevice(idEntryDevice: Int) {
+        val sharedPref = context.getSharedPreferences("DeviceConfig", Context.MODE_PRIVATE)
+        sharedPref.edit().putInt("id_entry_device", idEntryDevice).apply()
+        Log.d(TAG, "ID Entry Device configurado: $idEntryDevice")
+    }
+
+    /**
+     * ⭐ NUEVO: Obtiene el ID de entrada (IdEntryDevice)
      */
     fun obtenerIdEntryDevice(): Int {
+        val sharedPref = context.getSharedPreferences("DeviceConfig", Context.MODE_PRIVATE)
+        return sharedPref.getInt("id_entry_device", 1) // Default 1
+    }
+
+    /**
+     * ⭐ NUEVO: Configura el ID de salida (IdExitDevice)
+     */
+    fun configurarIdExitDevice(idExitDevice: Int) {
+        val sharedPref = context.getSharedPreferences("DeviceConfig", Context.MODE_PRIVATE)
+        sharedPref.edit().putInt("id_exit_device", idExitDevice).apply()
+        Log.d(TAG, "ID Exit Device configurado: $idExitDevice")
+    }
+
+    /**
+     * ⭐ NUEVO: Obtiene el ID de salida (IdExitDevice)
+     */
+    fun obtenerIdExitDevice(): Int {
+        val sharedPref = context.getSharedPreferences("DeviceConfig", Context.MODE_PRIVATE)
+        return sharedPref.getInt("id_exit_device", 2) // Default 2
+    }
+
+    /**
+     * Obtiene el ID del dispositivo para entrada según tipo configurado
+     */
+    fun obtenerIdEntryDeviceParaRegistro(): Int {
         val tipo = obtenerTipoDispositivo()
         return when (tipo) {
-            "ENTRADA", "MIXTO" -> 1  // Dispositivos de entrada o mixtos usan ID 1
-            else -> 0  // Dispositivos de solo salida no registran entrada
+            "ENTRADA", "MIXTO" -> obtenerIdEntryDevice()
+            else -> 0
         }
     }
 
     /**
-     * Obtiene el ID del dispositivo para salida (IdExitDevice)
-     * Según el tipo de dispositivo configurado
+     * Obtiene el ID del dispositivo para salida según tipo configurado
      */
-    fun obtenerIdExitDevice(): Int {
+    fun obtenerIdExitDeviceParaRegistro(): Int {
         val tipo = obtenerTipoDispositivo()
         return when (tipo) {
-            "SALIDA", "MIXTO" -> 2  // Dispositivos de salida o mixtos usan ID 2
-            else -> 0  // Dispositivos de solo entrada no registran salida
+            "SALIDA", "MIXTO" -> obtenerIdExitDevice()
+            else -> 0
         }
     }
 
@@ -117,13 +149,15 @@ class DispositivoManager(private val context: Context) {
 
     /**
      * Registra el dispositivo usando dbo.IOT_sp_RegistrarDispositivo
-     * VERSIÓN ACTUALIZADA con idNumerico
+     * y actualiza IdEntryDevice e IdExitDevice
      */
     suspend fun registrarDispositivoEnBD(
         idDispositivo: String,
         nombreDispositivo: String,
         tipoDispositivo: String,
-        idNumerico: Int
+        idNumerico: Int,
+        idEntryDevice: Int = 1,
+        idExitDevice: Int = 2
     ) {
         withContext(Dispatchers.IO) {
             var connection: Connection? = null
@@ -136,6 +170,7 @@ class DispositivoManager(private val context: Context) {
 
                 val macAddress = obtenerMacAddress()
 
+                // 1. Registrar dispositivo
                 val sql = "{CALL dbo.IOT_sp_RegistrarDispositivo(?, ?, ?, ?, ?)}"
                 val callableStatement = connection.prepareCall(sql)
                 callableStatement.setString(1, idDispositivo)
@@ -150,7 +185,7 @@ class DispositivoManager(private val context: Context) {
                     val id = resultSet.getInt("Id")
                     val mensaje = resultSet.getString("Mensaje")
 
-                    Log.d(TAG, "✓ Dispositivo registrado: $idDispositivo (ID Numérico: $idNumerico) - $mensaje")
+                    Log.d(TAG, "✓ Dispositivo registrado: $idDispositivo (ID: $idNumerico) - $mensaje")
 
                     resultSet.close()
                     callableStatement.close()
@@ -159,6 +194,21 @@ class DispositivoManager(private val context: Context) {
                     callableStatement.close()
                     throw Exception("No se obtuvo respuesta del procedimiento")
                 }
+
+                // 2. Actualizar IdEntryDevice e IdExitDevice
+                val sqlUpdate = """
+                    UPDATE IOT_Dispositivos
+                    SET IdEntryDevice = ?, IdExitDevice = ?
+                    WHERE IdDispositivo = ?
+                """
+                val stmtUpdate = connection.prepareStatement(sqlUpdate)
+                stmtUpdate.setInt(1, idEntryDevice)
+                stmtUpdate.setInt(2, idExitDevice)
+                stmtUpdate.setString(3, idDispositivo)
+                stmtUpdate.executeUpdate()
+                stmtUpdate.close()
+
+                Log.d(TAG, "✓ IDs actualizados - Entry: $idEntryDevice, Exit: $idExitDevice")
 
             } catch (e: Exception) {
                 Log.e(TAG, "Error al registrar dispositivo en BD", e)

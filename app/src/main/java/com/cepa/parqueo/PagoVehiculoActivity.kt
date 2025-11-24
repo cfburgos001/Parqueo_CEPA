@@ -104,8 +104,8 @@ class PagoVehiculoActivity : AppCompatActivity() {
 
                     binding.progressBar.visibility = View.GONE
 
-                    // Habilitar botón solo si hay que cobrar
-                    binding.btnProcesarPago.isEnabled = montoCalculado > 0
+                    // Habilitar botón siempre (con texto diferente según estado)
+                    binding.btnProcesarPago.isEnabled = true
                 }
                 is com.cepa.parqueo.database.CalculoMontoResult.Error -> {
                     Toast.makeText(
@@ -163,8 +163,12 @@ class PagoVehiculoActivity : AppCompatActivity() {
         // Monto
         binding.tvMonto.text = String.format("$%.2f", calculo.montoCalculado)
 
-        // Tarifa
-        binding.tvTarifa.text = String.format("$%.2f/hora", calculo.precioPorHora)
+        // ⭐ Mostrar desglose de tarifa escalonada
+        binding.tvTarifa.text = buildString {
+            append("1h: ${String.format("%.2f", calculo.precioPorHora)}")
+            append(" | 2h: $2.50")
+            append(" | +2h: $3.75/día")
+        }
 
         // Estado y UI según tipo de cobro
         mostrarEstadoCobro(calculo)
@@ -177,12 +181,15 @@ class PagoVehiculoActivity : AppCompatActivity() {
                 binding.cardEstado.setCardBackgroundColor(
                     ContextCompat.getColor(this, android.R.color.holo_green_light)
                 )
-                binding.tvEstadoTitulo.text = "✓ PERÍODO DE GRACIA - ADENTRO"
+                binding.tvEstadoTitulo.text = "✓ DENTRO DE PERÍODO DE GRACIA"
                 binding.tvEstadoMensaje.text =
                     "Los primeros 15 minutos son gratuitos.\nNo hay cargo por este vehículo."
 
                 binding.btnProcesarPago.text = "Continuar Sin Cobro"
                 binding.btnProcesarPago.isEnabled = true
+
+                // ⭐ Cambiar el monto a 0 para registrar gratis
+                montoCalculado = 0.0
             }
 
             "GRACIA_SALIDA" -> {
@@ -196,6 +203,9 @@ class PagoVehiculoActivity : AppCompatActivity() {
 
                 binding.btnProcesarPago.text = "Continuar Sin Cobro"
                 binding.btnProcesarPago.isEnabled = true
+
+                // ⭐ Ya pagó, no cobrar adicional
+                montoCalculado = 0.0
             }
 
             "DEBE_PAGAR" -> {
@@ -229,20 +239,23 @@ class PagoVehiculoActivity : AppCompatActivity() {
                 binding.tvEstadoTitulo.text = "✓ SIN CARGO"
                 binding.tvEstadoMensaje.text = "No hay cargo para este vehículo."
 
-                binding.btnProcesarPago.text = "Continuar"
+                binding.btnProcesarPago.text = "Continuar Sin Cobro"
                 binding.btnProcesarPago.isEnabled = true
+
+                // ⭐ Sin cargo
+                montoCalculado = 0.0
             }
         }
     }
 
     private fun procesarPago() {
-        // Si no hay monto a cobrar, ir directo a confirmación de salida
+        // ⭐ Si no hay monto a cobrar (gracia o gratis), registrar pago de $0.00
         if (montoCalculado <= 0) {
-            irAConfirmacionSalida()
+            ejecutarRegistroPagoGratis()
             return
         }
 
-        // Mostrar confirmación de pago
+        // Si hay monto, mostrar confirmación
         val mensaje = buildString {
             append("¿Confirmar pago de $${String.format("%.2f", montoCalculado)}?\n\n")
             append("Placa: ${vehiculo.placa}\n")
@@ -261,6 +274,51 @@ class PagoVehiculoActivity : AppCompatActivity() {
             }
             .setNegativeButton("Cancelar", null)
             .show()
+    }
+
+    /**
+     * ⭐ NUEVO: Registra pago de $0.00 para casos de gracia/gratis
+     */
+    private fun ejecutarRegistroPagoGratis() {
+        binding.btnProcesarPago.isEnabled = false
+        binding.btnCancelar.isEnabled = false
+        binding.progressBar.visibility = View.VISIBLE
+
+        lifecycleScope.launch {
+            val sharedPref = getSharedPreferences("DeviceConfig", MODE_PRIVATE)
+            val idNumerico = sharedPref.getInt("id_numerico", 3)
+
+            val result = vehiculoRepository.registrarPagoDesdeApp(
+                placa = vehiculo.placa,
+                monto = 0.00,
+                idPayDevice = idNumerico,
+                strRateKey = strRateKey
+            )
+
+            binding.progressBar.visibility = View.GONE
+
+            when (result) {
+                is com.cepa.parqueo.database.PagoResult.Success -> {
+                    Toast.makeText(
+                        this@PagoVehiculoActivity,
+                        "✓ Registrado - Sin cobro\n(Período de gracia)",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    irAConfirmacionSalida()
+                }
+                is com.cepa.parqueo.database.PagoResult.Error -> {
+                    Toast.makeText(
+                        this@PagoVehiculoActivity,
+                        "✗ Error: ${result.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    binding.btnProcesarPago.isEnabled = true
+                    binding.btnCancelar.isEnabled = true
+                }
+            }
+        }
     }
 
     private fun ejecutarRegistroPago() {
@@ -340,3 +398,4 @@ class PagoVehiculoActivity : AppCompatActivity() {
         return true
     }
 }
+

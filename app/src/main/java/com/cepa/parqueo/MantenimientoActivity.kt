@@ -2,13 +2,11 @@ package com.cepa.parqueo
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
-import com.google.android.material.textfield.TextInputEditText
 import com.cepa.parqueo.database.ConnectionResult
 import com.cepa.parqueo.database.DatabaseHelper
 import com.cepa.parqueo.database.DispositivoManager
@@ -181,21 +179,33 @@ class MantenimientoActivity : AppCompatActivity() {
     private fun mostrarDialogoConfigDispositivo() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_config_dispositivo, null)
 
-        val etIdDispositivo = dialogView.findViewById<TextInputEditText>(R.id.etIdDispositivo)
-        val etNombreDispositivo = dialogView.findViewById<TextInputEditText>(R.id.etNombreDispositivo)
-        val etIdNumerico = dialogView.findViewById<TextInputEditText>(R.id.etIdNumerico)
-        val spinnerTipo = dialogView.findViewById<Spinner>(R.id.spinnerTipoDispositivo)
+        val etIdDispositivo = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.etIdDispositivo)
+        val etNombreDispositivo = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.etNombreDispositivo)
+        val etIdNumerico = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.etIdNumerico)
+        val etIdEntryDevice = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.etIdEntryDevice)
+        val etIdExitDevice = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.etIdExitDevice)
+        val spinnerTipo = dialogView.findViewById<android.widget.Spinner>(R.id.spinnerTipoDispositivo)
 
         // Cargar valores actuales
         lifecycleScope.launch {
             val idActual = dispositivoManager.obtenerIdDispositivo()
             val idNumerico = dispositivoManager.obtenerIdNumerico()
+            val idEntryDevice = dispositivoManager.obtenerIdEntryDevice()
+            val idExitDevice = dispositivoManager.obtenerIdExitDevice()
             val tipoActual = dispositivoManager.obtenerTipoDispositivo()
 
             etIdDispositivo.setText(idActual)
 
             if (idNumerico > 0) {
                 etIdNumerico.setText(idNumerico.toString())
+            }
+
+            if (idEntryDevice > 0) {
+                etIdEntryDevice.setText(idEntryDevice.toString())
+            }
+
+            if (idExitDevice > 0) {
+                etIdExitDevice.setText(idExitDevice.toString())
             }
 
             // Pre-seleccionar tipo
@@ -206,7 +216,7 @@ class MantenimientoActivity : AppCompatActivity() {
             }
         }
 
-        val dialog = AlertDialog.Builder(this)
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle("Configurar Dispositivo")
             .setView(dialogView)
             .setPositiveButton("Guardar", null)
@@ -214,12 +224,14 @@ class MantenimientoActivity : AppCompatActivity() {
             .create()
 
         dialog.setOnShowListener {
-            val btnGuardar = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            val btnGuardar = dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)
             btnGuardar.setOnClickListener {
                 val nuevoId = etIdDispositivo.text.toString().trim()
                 val nombre = etNombreDispositivo.text.toString().trim()
                 val tipo = spinnerTipo.selectedItem.toString()
                 val idNumStr = etIdNumerico.text.toString().trim()
+                val idEntryStr = etIdEntryDevice.text.toString().trim()
+                val idExitStr = etIdExitDevice.text.toString().trim()
 
                 // Validaciones
                 if (nuevoId.isEmpty()) {
@@ -243,11 +255,29 @@ class MantenimientoActivity : AppCompatActivity() {
                     return@setOnClickListener
                 }
 
+                // Validar IdEntryDevice (opcional, default 1)
+                val idEntry = if (idEntryStr.isEmpty()) 1 else {
+                    idEntryStr.toIntOrNull() ?: run {
+                        Toast.makeText(this, "ID Entry Device debe ser un número válido", Toast.LENGTH_SHORT).show()
+                        return@setOnClickListener
+                    }
+                }
+
+                // Validar IdExitDevice (opcional, default 2)
+                val idExit = if (idExitStr.isEmpty()) 2 else {
+                    idExitStr.toIntOrNull() ?: run {
+                        Toast.makeText(this, "ID Exit Device debe ser un número válido", Toast.LENGTH_SHORT).show()
+                        return@setOnClickListener
+                    }
+                }
+
                 // Guardar configuración LOCAL (SharedPreferences)
                 val sharedPref = getSharedPreferences("DeviceConfig", MODE_PRIVATE)
                 sharedPref.edit().apply {
                     putString("id_dispositivo", nuevoId)
                     putInt("id_numerico", idNum)
+                    putInt("id_entry_device", idEntry)
+                    putInt("id_exit_device", idExit)
                     putString("tipo_dispositivo", tipo)
                     apply()
                 }
@@ -259,12 +289,18 @@ class MantenimientoActivity : AppCompatActivity() {
                             nuevoId,
                             nombre,
                             tipo,
-                            idNum
+                            idNum,
+                            idEntry,  // ⭐ Enviar IdEntryDevice
+                            idExit    // ⭐ Enviar IdExitDevice
                         )
 
                         Toast.makeText(
                             this@MantenimientoActivity,
-                            "✓ Configuración guardada\nID: $nuevoId\nID Numérico: $idNum\nTipo: $tipo",
+                            "✓ Configuración guardada\n" +
+                                    "ID: $nuevoId\n" +
+                                    "ID Numérico: $idNum\n" +
+                                    "ID Entry: $idEntry | ID Exit: $idExit\n" +
+                                    "Tipo: $tipo",
                             Toast.LENGTH_LONG
                         ).show()
                     } catch (e: Exception) {
