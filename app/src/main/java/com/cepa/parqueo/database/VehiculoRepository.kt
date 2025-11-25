@@ -24,7 +24,8 @@ class VehiculoRepository(private val context: Context) {
         placa: String,
         monto: Double,
         idPayDevice: Int,
-        strRateKey: String = "A"
+        strRateKey: String = "A",
+        operationType: Int = 1  // ⭐ NUEVO: 1=Efectivo, 2=Tarjeta
     ): PagoResult {
         return withContext(Dispatchers.IO) {
             var connection: Connection? = null
@@ -35,13 +36,14 @@ class VehiculoRepository(private val context: Context) {
                     return@withContext PagoResult.Error("No se pudo conectar a la base de datos")
                 }
 
-                val sql = "{CALL dbo.IOT_sp_RegistrarPagoDesdeApp(?, ?, ?, ?)}"
+                val sql = "{CALL dbo.IOT_sp_RegistrarPagoDesdeApp(?, ?, ?, ?, ?)}"
                 val callableStatement = connection.prepareCall(sql)
 
                 callableStatement.setString(1, placa)
                 callableStatement.setBigDecimal(2, monto.toBigDecimal())
                 callableStatement.setInt(3, idPayDevice)
                 callableStatement.setString(4, strRateKey)
+                callableStatement.setInt(5, operationType)  // ⭐ NUEVO
 
                 val resultSet = callableStatement.executeQuery()
 
@@ -56,7 +58,7 @@ class VehiculoRepository(private val context: Context) {
                         resultSet.close()
                         callableStatement.close()
 
-                        Log.d(TAG, "✓ Pago registrado - ID: $idVehiculo, Monto: $montoRegistrado")
+                        Log.d(TAG, "✓ Pago registrado - ID: $idVehiculo, Monto: $montoRegistrado, Tipo: $operationType")
                         return@withContext PagoResult.Success(
                             mensaje = mensaje,
                             idVehiculo = idVehiculo,

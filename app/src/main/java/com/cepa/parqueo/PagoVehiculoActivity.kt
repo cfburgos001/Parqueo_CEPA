@@ -31,6 +31,7 @@ class PagoVehiculoActivity : AppCompatActivity() {
     private var tiempoCobrableMinutos: Int = 0
     private var estadoCobro: String = ""
     private var strRateKey: String = "A"
+    private var operationType: Int = 1  // ⭐ NUEVO: 1=Efectivo (default), 2=Tarjeta
 
     companion object {
         private const val TAG = "PagoVehiculo"
@@ -255,11 +256,50 @@ class PagoVehiculoActivity : AppCompatActivity() {
             return
         }
 
-        // Si hay monto, mostrar confirmación
+        // ⭐ MOSTRAR SELECTOR DE MÉTODO DE PAGO
+        mostrarSelectorMetodoPago()
+    }
+
+    /**
+     * ⭐ NUEVO: Muestra diálogo para seleccionar método de pago
+     */
+    private fun mostrarSelectorMetodoPago() {
+        val opciones = arrayOf(
+            "💵 Efectivo (Cash)",
+            "💳 Tarjeta de Crédito"
+        )
+
+        AlertDialog.Builder(this)
+            .setTitle("Seleccionar Método de Pago")
+            .setItems(opciones) { dialog, which ->
+                operationType = when (which) {
+                    0 -> 1  // Efectivo
+                    1 -> 2  // Tarjeta
+                    else -> 1
+                }
+
+                // Mostrar confirmación con el método seleccionado
+                mostrarConfirmacionPago()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    /**
+     * ⭐ ACTUALIZADO: Confirmación de pago con método seleccionado
+     */
+    private fun mostrarConfirmacionPago() {
+        val metodoTexto = when (operationType) {
+            1 -> "💵 Efectivo"
+            2 -> "💳 Tarjeta de Crédito"
+            else -> "Efectivo"
+        }
+
         val mensaje = buildString {
-            append("¿Confirmar pago de $${String.format("%.2f", montoCalculado)}?\n\n")
+            append("¿Confirmar pago de ${String.format("%.2f", montoCalculado)}?\n\n")
             append("Placa: ${vehiculo.placa}\n")
             append("Tiempo cobrable: ${tiempoCobrableMinutos} minutos\n")
+            append("Método de pago: $metodoTexto\n")
 
             if (vehiculo.bitPaid == 1) {
                 append("\n⚠ Nota: Este es un cargo adicional por exceder el tiempo de gracia")
@@ -292,7 +332,8 @@ class PagoVehiculoActivity : AppCompatActivity() {
                 placa = vehiculo.placa,
                 monto = 0.00,
                 idPayDevice = idNumerico,
-                strRateKey = strRateKey
+                strRateKey = strRateKey,
+                operationType = 1  // ⭐ Gratis siempre es efectivo
             )
 
             binding.progressBar.visibility = View.GONE
@@ -335,20 +376,29 @@ class PagoVehiculoActivity : AppCompatActivity() {
                 placa = vehiculo.placa,
                 monto = montoCalculado,
                 idPayDevice = idNumerico,
-                strRateKey = strRateKey
+                strRateKey = strRateKey,
+                operationType = operationType  // ⭐ Usar método seleccionado
             )
 
             binding.progressBar.visibility = View.GONE
 
             when (result) {
                 is com.cepa.parqueo.database.PagoResult.Success -> {
+                    val metodoTexto = when (operationType) {
+                        1 -> "Efectivo"
+                        2 -> "Tarjeta"
+                        else -> "Efectivo"
+                    }
+
                     Toast.makeText(
                         this@PagoVehiculoActivity,
-                        "✓ Pago registrado correctamente\nMonto: $${String.format("%.2f", result.montoRegistrado)}",
+                        "✓ Pago registrado correctamente\n" +
+                                "Monto: ${String.format("%.2f", result.montoRegistrado)}\n" +
+                                "Método: $metodoTexto",
                         Toast.LENGTH_LONG
                     ).show()
 
-                    Log.d(TAG, "Pago registrado - ID: ${result.idVehiculo}, Monto: ${result.montoRegistrado}")
+                    Log.d(TAG, "Pago registrado - ID: ${result.idVehiculo}, Monto: ${result.montoRegistrado}, Tipo: $operationType")
 
                     // Ir a confirmación de salida
                     irAConfirmacionSalida()
@@ -398,4 +448,3 @@ class PagoVehiculoActivity : AppCompatActivity() {
         return true
     }
 }
-
