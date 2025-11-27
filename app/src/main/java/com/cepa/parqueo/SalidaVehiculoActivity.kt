@@ -17,7 +17,8 @@ import java.util.Date
 
 /**
  * Activity para registrar salida de vehículos
- * ACTUALIZADO: Integra flujo de cobro desde la app
+ * ACTUALIZADO: Respeta configuración de cobros habilitados/deshabilitados en POS
+ * SIEMPRE valida tiempo de gracia, independientemente de la configuración de cobros
  */
 class SalidaVehiculoActivity : AppCompatActivity() {
 
@@ -146,9 +147,10 @@ class SalidaVehiculoActivity : AppCompatActivity() {
     }
 
     /**
-     * ⭐ NUEVA LÓGICA: Evaluar si el vehículo necesita pagar
-     * - Si no ha pagado (bitPaid = 0) → Ir a pantalla de pago
-     * - Si ya pagó (bitPaid = 1) → Ir directo a confirmación de salida
+     * ⭐ LÓGICA ACTUALIZADA:
+     * - Si cobros están HABILITADOS en POS: Evaluar pago y enviar a pantalla correspondiente
+     * - Si cobros están DESHABILITADOS en POS: Ir directo a confirmación (sin pantalla de pago)
+     * - SIEMPRE se valida tiempo de gracia en confirmación
      */
     private fun procesarVehiculo(vehiculo: VehiculoDB) {
         android.util.Log.d("SalidaVehiculo", "=== DATOS DEL VEHÍCULO ===")
@@ -161,12 +163,32 @@ class SalidaVehiculoActivity : AppCompatActivity() {
         val ahora = Date()
         val tiempoMinutos = ((ahora.time - vehiculo.fechaEntrada.time) / 60000).toInt()
 
-        // Evaluar estado de pago
+        // ⭐ VERIFICAR SI COBROS ESTÁN HABILITADOS EN ESTE POS
+        val cobrosHabilitados = dispositivoManager.estanCobrosHabilitados()
+
+        if (!cobrosHabilitados) {
+            // ⭐ COBROS DESHABILITADOS: Ir directo a confirmación
+            // La confirmación SIEMPRE valida tiempo de gracia
+            android.util.Log.d("SalidaVehiculo", "Cobros deshabilitados - Saltando pantalla de pago")
+
+            Toast.makeText(
+                this,
+                "ℹ️ Este POS no procesa pagos\n" +
+                        "Validando tiempo de gracia...",
+                Toast.LENGTH_LONG
+            ).show()
+
+            abrirConfirmacionSalida(vehiculo, tiempoMinutos)
+            binding.btnRegistrarPorPlaca.isEnabled = true
+            return
+        }
+
+        // ⭐ COBROS HABILITADOS: Lógica normal de evaluación de pago
         if (vehiculo.bitPaid != 1) {
-            // ❌ NO HA PAGADO - Ir a pantalla de pago
+            // NO HA PAGADO - Ir a pantalla de pago
             abrirPantallaPago(vehiculo, tiempoMinutos)
         } else {
-            // ✓ YA PAGÓ - Ir directo a confirmación de salida
+            // YA PAGÓ - Ir directo a confirmación
             // (La confirmación evaluará el tiempo de gracia)
             abrirConfirmacionSalida(vehiculo, tiempoMinutos)
         }
@@ -175,7 +197,7 @@ class SalidaVehiculoActivity : AppCompatActivity() {
     }
 
     /**
-     * ⭐ NUEVO: Abre pantalla de pago
+     * Abre pantalla de pago
      */
     private fun abrirPantallaPago(vehiculo: VehiculoDB, tiempoMinutos: Int) {
         val intent = Intent(this, PagoVehiculoActivity::class.java)
@@ -192,7 +214,8 @@ class SalidaVehiculoActivity : AppCompatActivity() {
     }
 
     /**
-     * Abre confirmación de salida (para vehículos que ya pagaron)
+     * Abre confirmación de salida
+     * SIEMPRE valida tiempo de gracia, independientemente de si cobros están habilitados
      */
     private fun abrirConfirmacionSalida(vehiculo: VehiculoDB, tiempoMinutos: Int) {
         val intent = Intent(this, SalidaConfirmacionActivity::class.java)
@@ -224,7 +247,6 @@ class SalidaVehiculoActivity : AppCompatActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        // Limpiar placa después de pago o confirmación
         if (requestCode == REQUEST_CODE_PAGO || requestCode == REQUEST_CODE_CONFIRMACION) {
             binding.etPlaca.text?.clear()
             binding.btnRegistrarPorPlaca.isEnabled = true

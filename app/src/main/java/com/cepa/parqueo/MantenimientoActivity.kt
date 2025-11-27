@@ -31,6 +31,7 @@ class MantenimientoActivity : AppCompatActivity() {
         loadServerConfig()
         loadDispositivoInfo()
         loadTiempoGraciaConfig()
+        loadConfigCobrosPos()
     }
 
     private fun setupUI() {
@@ -43,9 +44,13 @@ class MantenimientoActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        // ⭐ NUEVO: Botón para guardar tiempo de gracia
         binding.btnGuardarTiempoGracia.setOnClickListener {
             guardarTiempoGracia()
+        }
+
+        // ⭐ NUEVO: Switch de cobros en POS
+        binding.switchCobrosPos.setOnCheckedChangeListener { _, isChecked ->
+            guardarConfigCobrosPos(isChecked)
         }
 
         binding.btnConfigDispositivo.setOnClickListener {
@@ -90,8 +95,82 @@ class MantenimientoActivity : AppCompatActivity() {
     }
 
     /**
-     * ⭐ NUEVA FUNCIÓN: Carga la configuración actual del tiempo de gracia
+     * ⭐ NUEVA FUNCIÓN: Carga el estado actual de cobros en POS
      */
+    private fun loadConfigCobrosPos() {
+        val cobrosHabilitados = dispositivoManager.estanCobrosHabilitados()
+
+        // Actualizar switch SIN disparar el listener
+        binding.switchCobrosPos.setOnCheckedChangeListener(null)
+        binding.switchCobrosPos.isChecked = cobrosHabilitados
+        binding.switchCobrosPos.setOnCheckedChangeListener { _, isChecked ->
+            guardarConfigCobrosPos(isChecked)
+        }
+
+        // Actualizar texto de estado
+        actualizarTextoEstadoCobros(cobrosHabilitados)
+    }
+
+    /**
+     * ⭐ NUEVA FUNCIÓN: Guarda la configuración de cobros
+     */
+    private fun guardarConfigCobrosPos(habilitado: Boolean) {
+        AlertDialog.Builder(this)
+            .setTitle("Confirmar Cambio")
+            .setMessage(
+                if (habilitado) {
+                    "¿Habilitar cobros en este POS?\n\n" +
+                            "Los operadores podrán procesar pagos desde esta terminal."
+                } else {
+                    "¿Deshabilitar cobros en este POS?\n\n" +
+                            "⚠️ IMPORTANTE: Los operadores NO podrán cobrar desde esta terminal.\n" +
+                            "• Los vehículos deberán pagar en la PayStation\n" +
+                            "• La validación de tiempo de gracia se mantendrá ACTIVA\n" +
+                            "• Se seguirán generando reingresos si exceden el tiempo de gracia"
+                }
+            )
+            .setPositiveButton("Confirmar") { _, _ ->
+                dispositivoManager.configurarCobrosHabilitados(habilitado)
+                actualizarTextoEstadoCobros(habilitado)
+
+                Toast.makeText(
+                    this,
+                    if (habilitado) {
+                        "✓ Cobros HABILITADOS en este POS"
+                    } else {
+                        "⚠️ Cobros DESHABILITADOS en este POS\n" +
+                                "Validación de tiempo de gracia: ACTIVA"
+                    },
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            .setNegativeButton("Cancelar") { _, _ ->
+                // Revertir switch
+                loadConfigCobrosPos()
+            }
+            .show()
+    }
+
+    /**
+     * ⭐ NUEVA FUNCIÓN: Actualiza el texto de estado
+     */
+    private fun actualizarTextoEstadoCobros(habilitado: Boolean) {
+        binding.tvEstadoCobrosPos.text = if (habilitado) {
+            "✓ Este POS puede procesar pagos"
+        } else {
+            "⚠️ Cobros deshabilitados (solo validación de salidas)\n" +
+                    "Validación de tiempo de gracia: ACTIVA"
+        }
+
+        binding.tvEstadoCobrosPos.setTextColor(
+            if (habilitado) {
+                getColor(android.R.color.holo_green_dark)
+            } else {
+                getColor(android.R.color.holo_orange_dark)
+            }
+        )
+    }
+
     private fun loadTiempoGraciaConfig() {
         lifecycleScope.launch {
             val idDispositivo = dispositivoManager.obtenerIdDispositivo()
@@ -102,9 +181,6 @@ class MantenimientoActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * ⭐ NUEVA FUNCIÓN: Guarda el tiempo de gracia configurado
-     */
     private fun guardarTiempoGracia() {
         val tiempoTexto = binding.etTiempoGracia.text.toString().trim()
 
@@ -125,7 +201,6 @@ class MantenimientoActivity : AppCompatActivity() {
             return
         }
 
-        // Mostrar confirmación
         AlertDialog.Builder(this)
             .setTitle("Confirmar Cambio")
             .setMessage("¿Desea cambiar el tiempo de gracia a $tiempoGracia minutos?\n\nEsto afectará todas las validaciones de salida y se sincronizará con el servidor.")
@@ -144,7 +219,6 @@ class MantenimientoActivity : AppCompatActivity() {
                         usuarioModificacion
                     )
 
-                    // Actualizar UI
                     binding.tvTiempoGraciaActual.text = "$tiempoGracia minutos"
 
                     Toast.makeText(
@@ -186,7 +260,6 @@ class MantenimientoActivity : AppCompatActivity() {
         val etIdExitDevice = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.etIdExitDevice)
         val spinnerTipo = dialogView.findViewById<android.widget.Spinner>(R.id.spinnerTipoDispositivo)
 
-        // Cargar valores actuales
         lifecycleScope.launch {
             val idActual = dispositivoManager.obtenerIdDispositivo()
             val idNumerico = dispositivoManager.obtenerIdNumerico()
@@ -208,7 +281,6 @@ class MantenimientoActivity : AppCompatActivity() {
                 etIdExitDevice.setText(idExitDevice.toString())
             }
 
-            // Pre-seleccionar tipo
             val tipos = resources.getStringArray(R.array.tipos_dispositivo)
             val posicion = tipos.indexOf(tipoActual)
             if (posicion >= 0) {
@@ -233,7 +305,6 @@ class MantenimientoActivity : AppCompatActivity() {
                 val idEntryStr = etIdEntryDevice.text.toString().trim()
                 val idExitStr = etIdExitDevice.text.toString().trim()
 
-                // Validaciones
                 if (nuevoId.isEmpty()) {
                     Toast.makeText(this, "Ingrese el ID del dispositivo", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
@@ -255,7 +326,6 @@ class MantenimientoActivity : AppCompatActivity() {
                     return@setOnClickListener
                 }
 
-                // Validar IdEntryDevice (opcional, default 1)
                 val idEntry = if (idEntryStr.isEmpty()) 1 else {
                     idEntryStr.toIntOrNull() ?: run {
                         Toast.makeText(this, "ID Entry Device debe ser un número válido", Toast.LENGTH_SHORT).show()
@@ -263,7 +333,6 @@ class MantenimientoActivity : AppCompatActivity() {
                     }
                 }
 
-                // Validar IdExitDevice (opcional, default 2)
                 val idExit = if (idExitStr.isEmpty()) 2 else {
                     idExitStr.toIntOrNull() ?: run {
                         Toast.makeText(this, "ID Exit Device debe ser un número válido", Toast.LENGTH_SHORT).show()
@@ -271,7 +340,6 @@ class MantenimientoActivity : AppCompatActivity() {
                     }
                 }
 
-                // Guardar configuración LOCAL (SharedPreferences)
                 val sharedPref = getSharedPreferences("DeviceConfig", MODE_PRIVATE)
                 sharedPref.edit().apply {
                     putString("id_dispositivo", nuevoId)
@@ -282,7 +350,6 @@ class MantenimientoActivity : AppCompatActivity() {
                     apply()
                 }
 
-                // Intentar registrar en BD (sin bloquear si falla)
                 lifecycleScope.launch {
                     try {
                         dispositivoManager.registrarDispositivoEnBD(
@@ -290,8 +357,8 @@ class MantenimientoActivity : AppCompatActivity() {
                             nombre,
                             tipo,
                             idNum,
-                            idEntry,  // ⭐ Enviar IdEntryDevice
-                            idExit    // ⭐ Enviar IdExitDevice
+                            idEntry,
+                            idExit
                         )
 
                         Toast.makeText(

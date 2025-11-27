@@ -9,30 +9,32 @@ import java.sql.Connection
 
 /**
  * Manager para gestión de dispositivos (Terminales POS)
- * Actualizado para usar IOT_Dispositivos con IdEntryDevice e IdExitDevice configurables
+ * ACTUALIZADO: Incluye configuración para habilitar/deshabilitar pagos en POS
  */
 class DispositivoManager(private val context: Context) {
 
     private val dbHelper = DatabaseHelper(context)
     private val TAG = "DispositivoManager"
 
+    companion object {
+        private const val PREFS_DEVICE = "DeviceConfig"
+        private const val KEY_COBROS_HABILITADOS = "cobros_habilitados_pos"
+    }
+
     /**
      * Obtiene o registra el ID del dispositivo actual
      */
     suspend fun obtenerIdDispositivo(): String {
-        val sharedPref = context.getSharedPreferences("DeviceConfig", Context.MODE_PRIVATE)
+        val sharedPref = context.getSharedPreferences(PREFS_DEVICE, Context.MODE_PRIVATE)
         var idDispositivo = sharedPref.getString("id_dispositivo", null)
 
         if (idDispositivo == null) {
-            // Generar ID basado en Android ID
             val androidId = Settings.Secure.getString(
                 context.contentResolver,
                 Settings.Secure.ANDROID_ID
             )
 
             idDispositivo = "POS-${androidId.takeLast(8).uppercase()}"
-
-            // Guardar
             sharedPref.edit().putString("id_dispositivo", idDispositivo).apply()
 
             Log.d(TAG, "Nuevo ID de dispositivo generado: $idDispositivo")
@@ -42,10 +44,29 @@ class DispositivoManager(private val context: Context) {
     }
 
     /**
+     * ⭐ NUEVO: Habilita o deshabilita los cobros en este POS
+     * Esta configuración es por dispositivo, NO por usuario
+     */
+    fun configurarCobrosHabilitados(habilitado: Boolean) {
+        val sharedPref = context.getSharedPreferences(PREFS_DEVICE, Context.MODE_PRIVATE)
+        sharedPref.edit().putBoolean(KEY_COBROS_HABILITADOS, habilitado).apply()
+        Log.d(TAG, "Cobros en POS ${if (habilitado) "HABILITADOS" else "DESHABILITADOS"}")
+    }
+
+    /**
+     * ⭐ NUEVO: Obtiene si los cobros están habilitados en este POS
+     * Por defecto: TRUE (habilitado)
+     */
+    fun estanCobrosHabilitados(): Boolean {
+        val sharedPref = context.getSharedPreferences(PREFS_DEVICE, Context.MODE_PRIVATE)
+        return sharedPref.getBoolean(KEY_COBROS_HABILITADOS, true) // Default: habilitado
+    }
+
+    /**
      * Configura el tipo de dispositivo
      */
     fun configurarTipoDispositivo(tipo: String) {
-        val sharedPref = context.getSharedPreferences("DeviceConfig", Context.MODE_PRIVATE)
+        val sharedPref = context.getSharedPreferences(PREFS_DEVICE, Context.MODE_PRIVATE)
         sharedPref.edit().putString("tipo_dispositivo", tipo).apply()
         Log.d(TAG, "Tipo de dispositivo configurado: $tipo")
     }
@@ -54,7 +75,7 @@ class DispositivoManager(private val context: Context) {
      * Obtiene el tipo de dispositivo
      */
     fun obtenerTipoDispositivo(): String {
-        val sharedPref = context.getSharedPreferences("DeviceConfig", Context.MODE_PRIVATE)
+        val sharedPref = context.getSharedPreferences(PREFS_DEVICE, Context.MODE_PRIVATE)
         return sharedPref.getString("tipo_dispositivo", "MIXTO") ?: "MIXTO"
     }
 
@@ -62,7 +83,7 @@ class DispositivoManager(private val context: Context) {
      * Configura el ID numérico del dispositivo
      */
     fun configurarIdNumerico(idNumerico: Int) {
-        val sharedPref = context.getSharedPreferences("DeviceConfig", Context.MODE_PRIVATE)
+        val sharedPref = context.getSharedPreferences(PREFS_DEVICE, Context.MODE_PRIVATE)
         sharedPref.edit().putInt("id_numerico", idNumerico).apply()
         Log.d(TAG, "ID numérico configurado: $idNumerico")
     }
@@ -71,41 +92,41 @@ class DispositivoManager(private val context: Context) {
      * Obtiene el ID numérico del dispositivo
      */
     fun obtenerIdNumerico(): Int {
-        val sharedPref = context.getSharedPreferences("DeviceConfig", Context.MODE_PRIVATE)
+        val sharedPref = context.getSharedPreferences(PREFS_DEVICE, Context.MODE_PRIVATE)
         return sharedPref.getInt("id_numerico", 0)
     }
 
     /**
-     * ⭐ NUEVO: Configura el ID de entrada (IdEntryDevice)
+     * Configura el ID de entrada (IdEntryDevice)
      */
     fun configurarIdEntryDevice(idEntryDevice: Int) {
-        val sharedPref = context.getSharedPreferences("DeviceConfig", Context.MODE_PRIVATE)
+        val sharedPref = context.getSharedPreferences(PREFS_DEVICE, Context.MODE_PRIVATE)
         sharedPref.edit().putInt("id_entry_device", idEntryDevice).apply()
         Log.d(TAG, "ID Entry Device configurado: $idEntryDevice")
     }
 
     /**
-     * ⭐ NUEVO: Obtiene el ID de entrada (IdEntryDevice)
+     * Obtiene el ID de entrada (IdEntryDevice)
      */
     fun obtenerIdEntryDevice(): Int {
-        val sharedPref = context.getSharedPreferences("DeviceConfig", Context.MODE_PRIVATE)
+        val sharedPref = context.getSharedPreferences(PREFS_DEVICE, Context.MODE_PRIVATE)
         return sharedPref.getInt("id_entry_device", 1) // Default 1
     }
 
     /**
-     * ⭐ NUEVO: Configura el ID de salida (IdExitDevice)
+     * Configura el ID de salida (IdExitDevice)
      */
     fun configurarIdExitDevice(idExitDevice: Int) {
-        val sharedPref = context.getSharedPreferences("DeviceConfig", Context.MODE_PRIVATE)
+        val sharedPref = context.getSharedPreferences(PREFS_DEVICE, Context.MODE_PRIVATE)
         sharedPref.edit().putInt("id_exit_device", idExitDevice).apply()
         Log.d(TAG, "ID Exit Device configurado: $idExitDevice")
     }
 
     /**
-     * ⭐ NUEVO: Obtiene el ID de salida (IdExitDevice)
+     * Obtiene el ID de salida (IdExitDevice)
      */
     fun obtenerIdExitDevice(): Int {
-        val sharedPref = context.getSharedPreferences("DeviceConfig", Context.MODE_PRIVATE)
+        val sharedPref = context.getSharedPreferences(PREFS_DEVICE, Context.MODE_PRIVATE)
         return sharedPref.getInt("id_exit_device", 2) // Default 2
     }
 
