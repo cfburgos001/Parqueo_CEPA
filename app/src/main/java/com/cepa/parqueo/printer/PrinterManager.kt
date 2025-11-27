@@ -134,7 +134,7 @@ object PrinterManager {
             out.write(byteArrayOf(0x1D, 0x48, 0x02))
 
             // GS h - Altura del código de barras (100 puntos)
-            out.write(byteArrayOf(0x1D, 0x68, 0x64))
+            out.write(byteArrayOf(0x1D, 0x68, 0x96.toByte()))
 
             // GS w - Ancho del código de barras (3 = mediano)
             out.write(byteArrayOf(0x1D, 0x77, 0x03))
