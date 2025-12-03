@@ -84,5 +84,4 @@
             android:screenOrientation="portrait"
             tools:replace="screenOrientation" />
     </application>
-
 </manifest>
