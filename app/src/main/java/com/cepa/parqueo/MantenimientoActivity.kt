@@ -2,6 +2,7 @@ package com.cepa.parqueo
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -10,14 +11,21 @@ import androidx.lifecycle.lifecycleScope
 import com.cepa.parqueo.database.ConnectionResult
 import com.cepa.parqueo.database.DatabaseHelper
 import com.cepa.parqueo.database.DispositivoManager
+import com.cepa.parqueo.database.ListaTarifasResult
+import com.cepa.parqueo.database.ModoCobroResult
+import com.cepa.parqueo.database.VehiculoRepository
 import com.cepa.parqueo.databinding.ActivityMantenimientoBinding
 import kotlinx.coroutines.launch
 
+/**
+ * VERSIÓN 2: Con gestión de tarifas (Escalonado/Sin Máximo)
+ */
 class MantenimientoActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMantenimientoBinding
     private lateinit var databaseHelper: DatabaseHelper
     private lateinit var dispositivoManager: DispositivoManager
+    private lateinit var vehiculoRepository: VehiculoRepository  // ⭐ NUEVO
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,12 +34,15 @@ class MantenimientoActivity : AppCompatActivity() {
 
         databaseHelper = DatabaseHelper(this)
         dispositivoManager = DispositivoManager(this)
+        vehiculoRepository = VehiculoRepository(this)  // ⭐ NUEVO
 
         setupUI()
         loadServerConfig()
         loadDispositivoInfo()
         loadTiempoGraciaConfig()
         loadConfigCobrosPos()
+        loadModoCobro()  // ⭐ NUEVO
+        loadTarifas()    // ⭐ NUEVO
     }
 
     private fun setupUI() {
@@ -48,9 +59,18 @@ class MantenimientoActivity : AppCompatActivity() {
             guardarTiempoGracia()
         }
 
-        // ⭐ NUEVO: Switch de cobros en POS
         binding.switchCobrosPos.setOnCheckedChangeListener { _, isChecked ->
             guardarConfigCobrosPos(isChecked)
+        }
+
+        // ⭐ NUEVO: Switch para Modo de Cobro
+        binding.switchModoCobro.setOnCheckedChangeListener { _, isChecked ->
+            cambiarModoCobro(isChecked)
+        }
+
+        // ⭐ NUEVO: Botón para recargar tarifas
+        binding.btnRecargarTarifas.setOnClickListener {
+            loadTarifas()
         }
 
         binding.btnConfigDispositivo.setOnClickListener {
@@ -95,25 +115,197 @@ class MantenimientoActivity : AppCompatActivity() {
     }
 
     /**
-     * ⭐ NUEVA FUNCIÓN: Carga el estado actual de cobros en POS
+     * ⭐ NUEVO: Carga el modo de cobro actual (Escalonado/Sin Máximo)
      */
+    private fun loadModoCobro() {
+        lifecycleScope.launch {
+            when (val result = vehiculoRepository.obtenerModoCobro()) {
+                is ModoCobroResult.Success -> {
+                    // Actualizar switch SIN disparar el listener
+                    binding.switchModoCobro.setOnCheckedChangeListener(null)
+                    binding.switchModoCobro.isChecked = result.cobroIndefinido
+                    binding.switchModoCobro.setOnCheckedChangeListener { _, isChecked ->
+                        cambiarModoCobro(isChecked)
+                    }
+
+                    // Actualizar texto de estado
+                    actualizarTextoModoCobro(result.cobroIndefinido, result.modoTexto)
+                }
+                is ModoCobroResult.Error -> {
+                    Toast.makeText(
+                        this@MantenimientoActivity,
+                        "⚠ Error al cargar modo de cobro: ${result.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    // Valores por defecto
+                    binding.switchModoCobro.isChecked = false
+                    actualizarTextoModoCobro(false, "Escalonado (Con Tope Diario)")
+                }
+            }
+        }
+    }
+
+    /**
+     * ⭐ NUEVO: Actualiza el texto del estado del modo de cobro
+     */
+    private fun actualizarTextoModoCobro(cobroIndefinido: Boolean, modoTexto: String) {
+        binding.tvEstadoModoCobro.text = if (cobroIndefinido) {
+            "✓ Modo Activo: SIN MÁXIMO\nEl cobro es por hora sin límite de tope diario"
+        } else {
+            "✓ Modo Activo: ESCALONADO\nCon tope diario según tipo de vehículo"
+        }
+
+        binding.tvEstadoModoCobro.setTextColor(
+            if (cobroIndefinido) {
+                getColor(android.R.color.holo_orange_dark)
+            } else {
+                getColor(android.R.color.holo_green_dark)
+            }
+        )
+    }
+
+    /**
+     * ⭐ NUEVO: Cambia el modo de cobro
+     */
+    private fun cambiarModoCobro(cobroIndefinido: Boolean) {
+        AlertDialog.Builder(this)
+            .setTitle("Confirmar Cambio de Modo")
+            .setMessage(
+                if (cobroIndefinido) {
+                    "¿Cambiar a modo SIN MÁXIMO?\n\n" +
+                            "• El cobro será por hora sin límite\n" +
+                            "• No habrá tope diario\n" +
+                            "• Aplica para todos los tipos de vehículo\n" +
+                            "• Este cambio afecta a TODOS los POS conectados"
+                } else {
+                    "¿Cambiar a modo ESCALONADO?\n\n" +
+                            "• Tarifa escalonada con tope diario\n" +
+                            "• Auto: hasta $3.75/día\n" +
+                            "• Moto: hasta $3.00/día\n" +
+                            "• Camión: hasta $6.00/día\n" +
+                            "• Este cambio afecta a TODOS los POS conectados"
+                }
+            )
+            .setPositiveButton("Confirmar") { _, _ ->
+                ejecutarCambioModoCobro(cobroIndefinido)
+            }
+            .setNegativeButton("Cancelar") { _, _ ->
+                // Revertir switch
+                loadModoCobro()
+            }
+            .show()
+    }
+
+    /**
+     * ⭐ NUEVO: Ejecuta el cambio de modo de cobro en BD
+     */
+    private fun ejecutarCambioModoCobro(cobroIndefinido: Boolean) {
+        binding.switchModoCobro.isEnabled = false
+
+        lifecycleScope.launch {
+            val sharedPref = getSharedPreferences("ParkingSession", MODE_PRIVATE)
+            val usuarioModificacion = sharedPref.getString("nombre_completo", "Sistema")
+
+            when (val result = vehiculoRepository.cambiarModoCobro(cobroIndefinido, usuarioModificacion)) {
+                is com.cepa.parqueo.database.DatabaseResult.Success -> {
+                    Toast.makeText(
+                        this@MantenimientoActivity,
+                        "✓ ${result.message}\n\nTodos los POS conectados usarán este modo",
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    // Recargar estado
+                    loadModoCobro()
+                    loadTarifas()
+                }
+                is com.cepa.parqueo.database.DatabaseResult.Error -> {
+                    Toast.makeText(
+                        this@MantenimientoActivity,
+                        "✗ Error: ${result.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    // Revertir switch
+                    loadModoCobro()
+                }
+            }
+
+            binding.switchModoCobro.isEnabled = true
+        }
+    }
+
+    /**
+     * ⭐ NUEVO: Carga y muestra las tarifas actuales
+     */
+    private fun loadTarifas() {
+        binding.progressBarTarifas?.visibility = View.VISIBLE
+
+        lifecycleScope.launch {
+            when (val result = vehiculoRepository.listarTarifas()) {
+                is ListaTarifasResult.Success -> {
+                    val tarifas = result.tarifas
+
+                    val tarifasTexto = buildString {
+                        append("📊 TARIFAS ACTUALES:\n\n")
+
+                        tarifas.forEach { tarifa ->
+                            val icono = when (tarifa.strRateKey) {
+                                "A" -> "🚗"
+                                "M" -> "🏍️"
+                                "C" -> "🚚"
+                                else -> "🚙"
+                            }
+
+                            append("$icono ${tarifa.tipoTarifa}\n")
+                            append("   Precio: $${String.format("%.2f", tarifa.precioPorHora)}/hora\n")
+
+                            if (tarifa.cobroIndefinido) {
+                                append("   Modo: Sin Máximo\n")
+                            } else {
+                                append("   Modo: Escalonado\n")
+                                append("   • 1h: $${String.format("%.2f", tarifa.precio1Hora)}\n")
+                                append("   • 2h: $${String.format("%.2f", tarifa.precio2Horas)}\n")
+                                append("   • Tope: $${String.format("%.2f", tarifa.precioMax)}/día\n")
+                            }
+                            append("\n")
+                        }
+                    }
+
+                    binding.tvTarifasActuales?.text = tarifasTexto
+                    binding.tvTarifasActuales?.visibility = View.VISIBLE
+                    binding.progressBarTarifas?.visibility = View.GONE
+                }
+                is ListaTarifasResult.Error -> {
+                    Toast.makeText(
+                        this@MantenimientoActivity,
+                        "⚠ Error al cargar tarifas: ${result.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    binding.tvTarifasActuales?.text = "Error al cargar tarifas"
+                    binding.tvTarifasActuales?.visibility = View.VISIBLE
+                    binding.progressBarTarifas?.visibility = View.GONE
+                }
+            }
+        }
+    }
+
+    // ===== MANTENER MÉTODOS EXISTENTES =====
+    // (Los demás métodos permanecen igual)
+
     private fun loadConfigCobrosPos() {
         val cobrosHabilitados = dispositivoManager.estanCobrosHabilitados()
 
-        // Actualizar switch SIN disparar el listener
         binding.switchCobrosPos.setOnCheckedChangeListener(null)
         binding.switchCobrosPos.isChecked = cobrosHabilitados
         binding.switchCobrosPos.setOnCheckedChangeListener { _, isChecked ->
             guardarConfigCobrosPos(isChecked)
         }
 
-        // Actualizar texto de estado
         actualizarTextoEstadoCobros(cobrosHabilitados)
     }
 
-    /**
-     * ⭐ NUEVA FUNCIÓN: Guarda la configuración de cobros
-     */
     private fun guardarConfigCobrosPos(habilitado: Boolean) {
         AlertDialog.Builder(this)
             .setTitle("Confirmar Cambio")
@@ -145,15 +337,11 @@ class MantenimientoActivity : AppCompatActivity() {
                 ).show()
             }
             .setNegativeButton("Cancelar") { _, _ ->
-                // Revertir switch
                 loadConfigCobrosPos()
             }
             .show()
     }
 
-    /**
-     * ⭐ NUEVA FUNCIÓN: Actualiza el texto de estado
-     */
     private fun actualizarTextoEstadoCobros(habilitado: Boolean) {
         binding.tvEstadoCobrosPos.text = if (habilitado) {
             "✓ Este POS puede procesar pagos"

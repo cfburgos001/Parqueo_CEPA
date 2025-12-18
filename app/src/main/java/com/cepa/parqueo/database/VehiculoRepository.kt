@@ -10,7 +10,7 @@ import java.util.Date
 
 /**
  * Repositorio para operaciones con la tabla IOT_Vehiculos
- * ACTUALIZADO: Incluye funcionalidad de cobro desde app
+ * VERSIÓN 2: Con soporte para tipos de vehículo y tarifas escalonadas/sin máximo
  */
 class VehiculoRepository(private val context: Context) {
 
@@ -18,14 +18,221 @@ class VehiculoRepository(private val context: Context) {
     private val TAG = "VehiculoRepository"
 
     /**
-     * ⭐ NUEVO: Registra el pago de un vehículo desde la app
+     *  Obtiene el modo de cobro actual (Escalonado/Sin Máximo)
      */
+    suspend fun obtenerModoCobro(): ModoCobroResult {
+        return withContext(Dispatchers.IO) {
+            var connection: Connection? = null
+            try {
+                connection = dbHelper.getConnection()
+
+                if (connection == null) {
+                    return@withContext ModoCobroResult.Error("No se pudo conectar a la base de datos")
+                }
+
+                val sql = "{CALL dbo.IOT_sp_ObtenerModoCobro}"
+                val callableStatement = connection.prepareCall(sql)
+                val resultSet = callableStatement.executeQuery()
+
+                if (resultSet.next()) {
+                    val cobroIndefinido = resultSet.getInt("CobroIndefinido") == 1
+                    val modoTexto = resultSet.getString("ModoTexto")
+
+                    resultSet.close()
+                    callableStatement.close()
+
+                    Log.d(TAG, "✓ Modo de cobro: $modoTexto")
+                    ModoCobroResult.Success(cobroIndefinido, modoTexto)
+                } else {
+                    resultSet.close()
+                    callableStatement.close()
+                    ModoCobroResult.Success(false, "Escalonado (Con Tope Diario)")
+                }
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error al obtener modo de cobro", e)
+                ModoCobroResult.Error("Error: ${e.message}")
+            } finally {
+                dbHelper.closeConnection(connection)
+            }
+        }
+    }
+
+    /**
+     *  Cambia el modo de cobro (Escalonado/Sin Máximo)
+     */
+    suspend fun cambiarModoCobro(cobroIndefinido: Boolean, usuarioModificacion: String? = null): DatabaseResult {
+        return withContext(Dispatchers.IO) {
+            var connection: Connection? = null
+            try {
+                connection = dbHelper.getConnection()
+
+                if (connection == null) {
+                    return@withContext DatabaseResult.Error("No se pudo conectar a la base de datos")
+                }
+
+                val sql = "{CALL dbo.IOT_sp_CambiarModoCobro(?, ?)}"
+                val callableStatement = connection.prepareCall(sql)
+                callableStatement.setInt(1, if (cobroIndefinido) 1 else 0)
+                callableStatement.setString(2, usuarioModificacion)
+
+                val resultSet = callableStatement.executeQuery()
+
+                if (resultSet.next()) {
+                    val exitoso = resultSet.getInt("Exitoso")
+                    val mensaje = resultSet.getString("Mensaje")
+
+                    resultSet.close()
+                    callableStatement.close()
+
+                    if (exitoso == 1) {
+                        Log.d(TAG, "✓ Modo de cobro cambiado: $mensaje")
+                        DatabaseResult.Success(mensaje)
+                    } else {
+                        Log.d(TAG, "✗ Error al cambiar modo: $mensaje")
+                        DatabaseResult.Error(mensaje)
+                    }
+                } else {
+                    resultSet.close()
+                    callableStatement.close()
+                    DatabaseResult.Error("No se obtuvo respuesta del procedimiento")
+                }
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error al cambiar modo de cobro", e)
+                DatabaseResult.Error("Error: ${e.message}")
+            } finally {
+                dbHelper.closeConnection(connection)
+            }
+        }
+    }
+
+    /**
+     *  Lista todas las tarifas activas
+     */
+    suspend fun listarTarifas(): ListaTarifasResult {
+        return withContext(Dispatchers.IO) {
+            var connection: Connection? = null
+            try {
+                connection = dbHelper.getConnection()
+
+                if (connection == null) {
+                    return@withContext ListaTarifasResult.Error("No se pudo conectar a la base de datos")
+                }
+
+                val sql = "{CALL dbo.IOT_sp_ListarTarifas}"
+                val callableStatement = connection.prepareCall(sql)
+                val resultSet = callableStatement.executeQuery()
+
+                val tarifas = mutableListOf<TarifaDetalle>()
+
+                while (resultSet.next()) {
+                    tarifas.add(
+                        TarifaDetalle(
+                            id = resultSet.getInt("Id"),
+                            tipoTarifa = resultSet.getString("TipoTarifa"),
+                            strRateKey = resultSet.getString("strRateKey"),
+                            tipoVehiculo = resultSet.getString("TipoVehiculo") ?: "",
+                            precioPorHora = resultSet.getDouble("PrecioPorHora"),
+                            precio1Hora = resultSet.getDouble("Precio1Hora"),
+                            precio2Horas = resultSet.getDouble("Precio2Horas"),
+                            precioDiaCompleto = resultSet.getDouble("PrecioDiaCompleto"),
+                            precioMax = resultSet.getDouble("PrecioMax"),
+                            cobroIndefinido = resultSet.getInt("CobroIndefinido") == 1,
+                            modoCobroTexto = resultSet.getString("ModoCobroTexto"),
+                            descripcion = resultSet.getString("Descripcion") ?: ""
+                        )
+                    )
+                }
+
+                resultSet.close()
+                callableStatement.close()
+
+                Log.d(TAG, "✓ ${tarifas.size} tarifas listadas")
+                ListaTarifasResult.Success(tarifas)
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error al listar tarifas", e)
+                ListaTarifasResult.Error("Error: ${e.message}")
+            } finally {
+                dbHelper.closeConnection(connection)
+            }
+        }
+    }
+
+    /**
+     * Registra la entrada de un vehículo con tipo de vehículo
+     */
+    suspend fun registrarEntrada(
+        placa: String,
+        usuario: String,
+        idOperador: Int,
+        idDispositivo: String,
+        strRateKey: String = "A"  //  Tipo de vehículo
+    ): RegistroEntradaResult {
+        return withContext(Dispatchers.IO) {
+            var connection: Connection? = null
+            try {
+                connection = dbHelper.getConnection()
+
+                if (connection == null) {
+                    return@withContext RegistroEntradaResult.Error("No se pudo conectar a la base de datos")
+                }
+
+                val sql = "{CALL dbo.IOT_sp_RegistrarEntrada(?, ?, ?, ?, ?)}"
+                val callableStatement = connection.prepareCall(sql)
+
+                callableStatement.setString(1, placa)
+                callableStatement.setString(2, usuario)
+                callableStatement.setInt(3, idOperador)
+                callableStatement.setString(4, idDispositivo)
+                callableStatement.setString(5, strRateKey)  // ⭐ NUEVO
+
+                val resultSet = callableStatement.executeQuery()
+
+                if (resultSet.next()) {
+                    val id = resultSet.getInt("Id")
+                    val codigoBarras = resultSet.getString("CodigoBarras")
+
+                    resultSet.close()
+                    callableStatement.close()
+
+                    if (id > 0) {
+                        Log.d(TAG, "✓ Entrada registrada - ID: $id, Código: $codigoBarras, Tipo: $strRateKey")
+                        return@withContext RegistroEntradaResult.Success(
+                            id = id,
+                            codigoBarras = codigoBarras
+                        )
+                    } else {
+                        return@withContext RegistroEntradaResult.Error("Error al registrar entrada")
+                    }
+                } else {
+                    resultSet.close()
+                    callableStatement.close()
+                    return@withContext RegistroEntradaResult.Error("No se obtuvo respuesta del procedimiento")
+                }
+
+            } catch (e: SQLException) {
+                Log.e(TAG, "Error SQL al registrar entrada", e)
+                return@withContext RegistroEntradaResult.Error("Error SQL: ${e.message}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error al registrar entrada", e)
+                return@withContext RegistroEntradaResult.Error("Error: ${e.message}")
+            } finally {
+                dbHelper.closeConnection(connection)
+            }
+        }
+    }
+
+    // ===== MANTENER MÉTODOS EXISTENTES =====
+    // (Los demás métodos permanecen igual que antes)
+
     suspend fun registrarPagoDesdeApp(
         placa: String,
         monto: Double,
         idPayDevice: Int,
         strRateKey: String = "A",
-        operationType: Int = 1  // ⭐ NUEVO: 1=Efectivo, 2=Tarjeta
+        operationType: Int = 1
     ): PagoResult {
         return withContext(Dispatchers.IO) {
             var connection: Connection? = null
@@ -43,7 +250,7 @@ class VehiculoRepository(private val context: Context) {
                 callableStatement.setBigDecimal(2, monto.toBigDecimal())
                 callableStatement.setInt(3, idPayDevice)
                 callableStatement.setString(4, strRateKey)
-                callableStatement.setInt(5, operationType)  // ⭐ NUEVO
+                callableStatement.setInt(5, operationType)
 
                 val resultSet = callableStatement.executeQuery()
 
@@ -89,71 +296,6 @@ class VehiculoRepository(private val context: Context) {
         }
     }
 
-    /**
-     * Registra la entrada de un vehículo usando dbo.IOT_sp_RegistrarEntrada
-     */
-    suspend fun registrarEntrada(
-        placa: String,
-        usuario: String,
-        idOperador: Int,
-        idDispositivo: String
-    ): RegistroEntradaResult {
-        return withContext(Dispatchers.IO) {
-            var connection: Connection? = null
-            try {
-                connection = dbHelper.getConnection()
-
-                if (connection == null) {
-                    return@withContext RegistroEntradaResult.Error("No se pudo conectar a la base de datos")
-                }
-
-                // El SP obtiene IdEntryDevice automáticamente desde IOT_Dispositivos
-                val sql = "{CALL dbo.IOT_sp_RegistrarEntrada(?, ?, ?, ?)}"
-                val callableStatement = connection.prepareCall(sql)
-
-                callableStatement.setString(1, placa)
-                callableStatement.setString(2, usuario)
-                callableStatement.setInt(3, idOperador)
-                callableStatement.setString(4, idDispositivo)
-
-                val resultSet = callableStatement.executeQuery()
-
-                if (resultSet.next()) {
-                    val id = resultSet.getInt("Id")
-                    val codigoBarras = resultSet.getString("CodigoBarras")
-
-                    resultSet.close()
-                    callableStatement.close()
-
-                    if (id > 0) {
-                        Log.d(TAG, "✓ Entrada registrada - ID: $id, Código: $codigoBarras")
-                        return@withContext RegistroEntradaResult.Success(
-                            id = id,
-                            codigoBarras = codigoBarras
-                        )
-                    } else {
-                        return@withContext RegistroEntradaResult.Error("Error al registrar entrada")
-                    }
-                } else {
-                    resultSet.close()
-                    callableStatement.close()
-                    return@withContext RegistroEntradaResult.Error("No se obtuvo respuesta del procedimiento")
-                }
-
-            } catch (e: SQLException) {
-                Log.e(TAG, "Error SQL al registrar entrada", e)
-                return@withContext RegistroEntradaResult.Error("Error SQL: ${e.message}")
-            } catch (e: Exception) {
-                Log.e(TAG, "Error al registrar entrada", e)
-                return@withContext RegistroEntradaResult.Error("Error: ${e.message}")
-            } finally {
-                dbHelper.closeConnection(connection)
-            }
-        }
-    }
-    /**
-     * Busca un vehículo por placa en IOT_Vehiculos
-     */
     suspend fun buscarVehiculoPorPlaca(placa: String): VehiculoResult {
         return withContext(Dispatchers.IO) {
             var connection: Connection? = null
@@ -203,7 +345,7 @@ class VehiculoRepository(private val context: Context) {
                     resultSet.close()
                     preparedStatement.close()
 
-                    Log.d(TAG, "✓ Vehículo encontrado: ${vehiculo.placa} - bitPaid: ${vehiculo.bitPaid} - Monto: ${vehiculo.monto}")
+                    Log.d(TAG, "✓ Vehículo encontrado: ${vehiculo.placa} - Tipo: ${vehiculo.strRateKey}")
                     VehiculoResult.Found(vehiculo)
                 } else {
                     resultSet.close()
@@ -225,9 +367,6 @@ class VehiculoRepository(private val context: Context) {
         }
     }
 
-    /**
-     * Busca un vehículo por código de barras
-     */
     suspend fun buscarVehiculoPorCodigo(codigo: String): VehiculoResult {
         return withContext(Dispatchers.IO) {
             var connection: Connection? = null
@@ -299,9 +438,6 @@ class VehiculoRepository(private val context: Context) {
         }
     }
 
-    /**
-     * Registra la salida de un vehículo usando dbo.IOT_sp_RegistrarSalida
-     */
     suspend fun registrarSalida(placa: String, idDispositivo: String): SalidaResult {
         return withContext(Dispatchers.IO) {
             var connection: Connection? = null
@@ -312,7 +448,6 @@ class VehiculoRepository(private val context: Context) {
                     return@withContext SalidaResult.Error("No se pudo conectar a la base de datos")
                 }
 
-                // Obtener IdExitDevice desde IOT_Dispositivos
                 val sqlGetId = """
                 SELECT TOP 1 ISNULL(IdExitDevice, 2) AS IdExitDevice
                 FROM IOT_Dispositivos
@@ -323,14 +458,13 @@ class VehiculoRepository(private val context: Context) {
                 stmtGetId.setString(1, idDispositivo)
                 val rsId = stmtGetId.executeQuery()
 
-                var idExitDevice = 2 // Default
+                var idExitDevice = 2
                 if (rsId.next()) {
                     idExitDevice = rsId.getInt("IdExitDevice")
                 }
                 rsId.close()
                 stmtGetId.close()
 
-                // Actualizar salida
                 val sql = """
                 UPDATE dbo.IOT_Vehiculos
                 SET 
@@ -372,9 +506,6 @@ class VehiculoRepository(private val context: Context) {
         }
     }
 
-    /**
-     * Calcula el monto a pagar según las reglas de negocio
-     */
     suspend fun calcularMonto(placa: String): CalculoMontoResult {
         return withContext(Dispatchers.IO) {
             var connection: Connection? = null
@@ -425,9 +556,6 @@ class VehiculoRepository(private val context: Context) {
         }
     }
 
-    /**
-     * Incrementa el contador de reimpresiones (bitCopy)
-     */
     suspend fun incrementarBitCopy(codigoBarras: String): DatabaseResult {
         return withContext(Dispatchers.IO) {
             var connection: Connection? = null
@@ -467,9 +595,6 @@ class VehiculoRepository(private val context: Context) {
         }
     }
 
-    /**
-     * Obtiene la tarifa actual de IOT_Tarifas
-     */
     suspend fun obtenerTarifa(): TarifaResult {
         return withContext(Dispatchers.IO) {
             var connection: Connection? = null
@@ -509,7 +634,6 @@ class VehiculoRepository(private val context: Context) {
                     resultSet.close()
                     statement.close()
 
-                    // Valores por defecto
                     TarifaResult.Success(Tarifa())
                 }
 
@@ -522,9 +646,6 @@ class VehiculoRepository(private val context: Context) {
         }
     }
 
-    /**
-     * Registra salida y reingreso por exceso de tiempo de gracia
-     */
     suspend fun registrarSalidaYReingresoPorGracia(
         placa: String,
         idDispositivoSalida: String
@@ -563,8 +684,7 @@ class VehiculoRepository(private val context: Context) {
 
                         Log.d(TAG, "✓ Salida y reingreso registrados - Placa: $placa")
                         Log.d(TAG, "  Registro anterior cerrado: $idRegistroAnterior")
-                        Log.d(TAG, "  Nuevo registro creado: $idNuevoRegistro")
-                        Log.d(TAG, "  Nuevo código: $nuevoCodigoBarras")
+                        Log.d(TAG, "  Nuevo registro creado: $idNuevoRegistro (strRateKey=X)")
 
                         return@withContext ReingresoPorGraciaResult.Success(
                             mensaje = mensaje,
@@ -601,9 +721,8 @@ class VehiculoRepository(private val context: Context) {
     }
 }
 
-/**
- * Clase de datos para vehículo en BD
- */
+// ===== DATA CLASSES =====
+
 data class VehiculoDB(
     val id: Int,
     val placa: String,
@@ -620,9 +739,6 @@ data class VehiculoDB(
     fun tieneMontoRegistrado(): Boolean = monto > 0.0
 }
 
-/**
- * Clase de datos para cálculo de monto
- */
 data class CalculoMonto(
     val tiempoTotalMinutos: Int,
     val tiempoCobrableMinutos: Int,
@@ -633,16 +749,12 @@ data class CalculoMonto(
     val estadoCobro: String
 )
 
-/**
- * Clase de datos para tarifa
- */
 data class Tarifa(
     val precio1Hora: Double = 1.25,
     val precio2Horas: Double = 2.50,
     val precioDiaCompleto: Double = 3.75,
     val strRateKey: String = "A"
 ) {
-    // Precio por hora para compatibilidad
     val precioPorHora: Double
         get() = precio1Hora
 
@@ -650,16 +762,31 @@ data class Tarifa(
         get() = precio1Hora
 }
 
-// ===== SEALED CLASSES PARA RESULTADOS =====
+/**
+ *  Data class para detalles de tarifa
+ */
+data class TarifaDetalle(
+    val id: Int,
+    val tipoTarifa: String,
+    val strRateKey: String,
+    val tipoVehiculo: String,
+    val precioPorHora: Double,
+    val precio1Hora: Double,
+    val precio2Horas: Double,
+    val precioDiaCompleto: Double,
+    val precioMax: Double,
+    val cobroIndefinido: Boolean,
+    val modoCobroTexto: String,
+    val descripcion: String
+)
+
+// ===== SEALED CLASSES =====
 
 sealed class DatabaseResult {
     data class Success(val message: String) : DatabaseResult()
     data class Error(val message: String) : DatabaseResult()
 }
 
-/**
- * ⭐ NUEVO: Resultado de registro de pago
- */
 sealed class PagoResult {
     data class Success(
         val mensaje: String,
@@ -710,4 +837,20 @@ sealed class RegistroEntradaResult {
     ) : RegistroEntradaResult()
 
     data class Error(val message: String) : RegistroEntradaResult()
+}
+
+/**
+ *  Resultado de consulta de modo de cobro
+ */
+sealed class ModoCobroResult {
+    data class Success(val cobroIndefinido: Boolean, val modoTexto: String) : ModoCobroResult()
+    data class Error(val message: String) : ModoCobroResult()
+}
+
+/**
+ *  Resultado de lista de tarifas
+ */
+sealed class ListaTarifasResult {
+    data class Success(val tarifas: List<TarifaDetalle>) : ListaTarifasResult()
+    data class Error(val message: String) : ListaTarifasResult()
 }

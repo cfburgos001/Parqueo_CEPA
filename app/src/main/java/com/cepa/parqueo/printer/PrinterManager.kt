@@ -12,6 +12,10 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.UUID
 
+/**
+ * PrinterManager V2
+ * Actualizado para imprimir el tipo de vehículo en el ticket
+ */
 @SuppressLint("MissingPermission")
 object PrinterManager {
 
@@ -71,7 +75,7 @@ object PrinterManager {
     }
 
     /**
-     * Imprime ticket con CODE128 de la PLACA (más fácil de escanear)
+     * ⭐ ACTUALIZADO: Imprime ticket con tipo de vehículo
      */
     private fun sendEscPosPrint(out: OutputStream, data: ReceiptData) {
         // Inicializar
@@ -96,6 +100,13 @@ object PrinterManager {
         val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         val timeFormatter = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
 
+        // ⭐ NUEVO: Tipo de Vehículo
+        out.write(byteArrayOf(0x1B, 0x45, 0x01)) // Negrita
+        out.write("TIPO: ${data.vehicleType}\n".utf8())
+        out.write(byteArrayOf(0x1B, 0x45, 0x00))
+        out.write("\n".utf8())
+
+        // Placa
         out.write(byteArrayOf(0x1B, 0x45, 0x01)) // Negrita
         out.write("PLACA: ${data.plate}\n".utf8())
         out.write(byteArrayOf(0x1B, 0x45, 0x00))
@@ -114,7 +125,6 @@ object PrinterManager {
         out.write("PARA SU SALIDA\n".utf8())
         out.write(byteArrayOf(0x1B, 0x45, 0x00))
         out.write("============================\n".utf8())
-
 
         out.write("\n\n\n".utf8())
 
@@ -157,6 +167,9 @@ object PrinterManager {
         }
     }
 
+    /**
+     * ⭐ ACTUALIZADO: Incluye tipo de vehículo en texto de fallback
+     */
     private fun buildReceiptText(data: ReceiptData): String {
         val dateFormatter = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
         return buildString {
@@ -165,6 +178,8 @@ object PrinterManager {
             appendLine("========================")
             appendLine()
             appendLine("[CODE128: ${data.plate}]")
+            appendLine()
+            appendLine("TIPO: ${data.vehicleType}")  // ⭐ NUEVO
             appendLine()
             appendLine("PLACA: ${data.plate}")
             appendLine()

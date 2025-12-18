@@ -35,16 +35,60 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="32dp"
-                android:text="Ingrese la placa del vehículo para registrar la entrada y generar el recibo."
+                android:text="Ingrese la placa del vehículo y seleccione el tipo para registrar la entrada."
                 android:textAlignment="center"
                 android:textColor="#212121"
                 android:textSize="16sp" />
+
+            <!-- ⭐ NUEVO: Selector de Tipo de Vehículo -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="#E3F2FD">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tipo de Vehículo"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#1976D2"
+                        android:layout_marginBottom="8dp"/>
+
+                    <Spinner
+                        android:id="@+id/spinnerTipoVehiculo"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:background="@android:drawable/btn_dropdown"
+                        android:padding="12dp"
+                        android:spinnerMode="dropdown"/>
+
+                    <TextView
+                        android:id="@+id/tvInfoTarifa"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Cargando tarifas..."
+                        android:textSize="12sp"
+                        android:textColor="#757575"
+                        android:visibility="gone"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilPlaca"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Placa del Vehculo"
+                android:hint="Placa del Vehículo"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_marginBottom="24dp">
 
@@ -67,7 +111,6 @@
                 app:cornerRadius="12dp"
                 android:layout_marginBottom="16dp"/>
 
-            <!-- ⭐ NUEVO: Botón de Reimpresión -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnReimprimir"
                 android:layout_width="match_parent"
