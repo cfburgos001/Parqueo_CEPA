@@ -130,7 +130,7 @@ class SalidaConfirmacionActivity : AppCompatActivity() {
         }
         binding.tvTiempoEstancia.text = tiempoTexto
 
-        // ⭐ LÓGICA SIMPLIFICADA: Solo evaluar tiempo de gracia
+        //  LÓGICA SIMPLIFICADA: Solo evaluar tiempo de gracia
         if (bitPaid == 1 && fechaPago != null) {
             // Vehículo pagó - Evaluar tiempo de gracia
             val tiempoGraciaMinutos = ((horaSalida.time - fechaPago!!.time) / 60000).toInt()

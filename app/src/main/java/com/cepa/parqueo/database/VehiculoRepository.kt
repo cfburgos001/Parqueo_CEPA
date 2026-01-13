@@ -186,7 +186,7 @@ class VehiculoRepository(private val context: Context) {
                 callableStatement.setString(2, usuario)
                 callableStatement.setInt(3, idOperador)
                 callableStatement.setString(4, idDispositivo)
-                callableStatement.setString(5, strRateKey)  // ⭐ NUEVO
+                callableStatement.setString(5, strRateKey)  // 
 
                 val resultSet = callableStatement.executeQuery()
 

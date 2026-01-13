@@ -31,7 +31,7 @@ class PagoVehiculoActivity : AppCompatActivity() {
     private var tiempoCobrableMinutos: Int = 0
     private var estadoCobro: String = ""
     private var strRateKey: String = "A"
-    private var operationType: Int = 1  // ⭐ NUEVO: 1=Efectivo (default), 2=Tarjeta
+    private var operationType: Int = 1  //  1=Efectivo (default), 2=Tarjeta
 
     companion object {
         private const val TAG = "PagoVehiculo"
@@ -164,7 +164,7 @@ class PagoVehiculoActivity : AppCompatActivity() {
         // Monto
         binding.tvMonto.text = String.format("$%.2f", calculo.montoCalculado)
 
-        // ⭐ Mostrar desglose de tarifa escalonada
+        //  Mostrar desglose de tarifa escalonada
         binding.tvTarifa.text = buildString {
             append("1h: ${String.format("%.2f", calculo.precioPorHora)}")
             append(" | 2h: $2.50")
@@ -189,7 +189,7 @@ class PagoVehiculoActivity : AppCompatActivity() {
                 binding.btnProcesarPago.text = "Continuar Sin Cobro"
                 binding.btnProcesarPago.isEnabled = true
 
-                // ⭐ Cambiar el monto a 0 para registrar gratis
+                //  Cambiar el monto a 0 para registrar gratis
                 montoCalculado = 0.0
             }
 
@@ -205,7 +205,7 @@ class PagoVehiculoActivity : AppCompatActivity() {
                 binding.btnProcesarPago.text = "Continuar Sin Cobro"
                 binding.btnProcesarPago.isEnabled = true
 
-                // ⭐ Ya pagó, no cobrar adicional
+                //  Ya pagó, no cobrar adicional
                 montoCalculado = 0.0
             }
 
@@ -243,25 +243,25 @@ class PagoVehiculoActivity : AppCompatActivity() {
                 binding.btnProcesarPago.text = "Continuar Sin Cobro"
                 binding.btnProcesarPago.isEnabled = true
 
-                // ⭐ Sin cargo
+                //  Sin cargo
                 montoCalculado = 0.0
             }
         }
     }
 
     private fun procesarPago() {
-        // ⭐ Si no hay monto a cobrar (gracia o gratis), registrar pago de $0.00
+        //  Si no hay monto a cobrar (gracia o gratis), registrar pago de $0.00
         if (montoCalculado <= 0) {
             ejecutarRegistroPagoGratis()
             return
         }
 
-        // ⭐ MOSTRAR SELECTOR DE MÉTODO DE PAGO
+        //  MOSTRAR SELECTOR DE MÉTODO DE PAGO
         mostrarSelectorMetodoPago()
     }
 
     /**
-     * ⭐ NUEVO: Muestra diálogo para seleccionar método de pago
+     *  Muestra diálogo para seleccionar método de pago
      */
     private fun mostrarSelectorMetodoPago() {
         val opciones = arrayOf(
@@ -286,7 +286,7 @@ class PagoVehiculoActivity : AppCompatActivity() {
     }
 
     /**
-     * ⭐ ACTUALIZADO: Confirmación de pago con método seleccionado
+     *  ACTUALIZADO: Confirmación de pago con método seleccionado
      */
     private fun mostrarConfirmacionPago() {
         val metodoTexto = when (operationType) {
@@ -317,7 +317,7 @@ class PagoVehiculoActivity : AppCompatActivity() {
     }
 
     /**
-     * ⭐ NUEVO: Registra pago de $0.00 para casos de gracia/gratis
+     *  Registra pago de $0.00 para casos de gracia/gratis
      */
     private fun ejecutarRegistroPagoGratis() {
         binding.btnProcesarPago.isEnabled = false
@@ -333,7 +333,7 @@ class PagoVehiculoActivity : AppCompatActivity() {
                 monto = 0.00,
                 idPayDevice = idNumerico,
                 strRateKey = strRateKey,
-                operationType = 1  // ⭐ Gratis siempre es efectivo
+                operationType = 1  //  Gratis siempre es efectivo
             )
 
             binding.progressBar.visibility = View.GONE
@@ -377,7 +377,7 @@ class PagoVehiculoActivity : AppCompatActivity() {
                 monto = montoCalculado,
                 idPayDevice = idNumerico,
                 strRateKey = strRateKey,
-                operationType = operationType  // ⭐ Usar método seleccionado
+                operationType = operationType  //  Usar método seleccionado
             )
 
             binding.progressBar.visibility = View.GONE

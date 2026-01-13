@@ -44,7 +44,7 @@ class DispositivoManager(private val context: Context) {
     }
 
     /**
-     * ⭐ NUEVO: Habilita o deshabilita los cobros en este POS
+     *  Habilita o deshabilita los cobros en este POS
      * Esta configuración es por dispositivo, NO por usuario
      */
     fun configurarCobrosHabilitados(habilitado: Boolean) {
@@ -54,7 +54,7 @@ class DispositivoManager(private val context: Context) {
     }
 
     /**
-     * ⭐ NUEVO: Obtiene si los cobros están habilitados en este POS
+     *  Obtiene si los cobros están habilitados en este POS
      * Por defecto: TRUE (habilitado)
      */
     fun estanCobrosHabilitados(): Boolean {

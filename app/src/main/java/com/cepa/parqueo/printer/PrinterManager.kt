@@ -75,7 +75,7 @@ object PrinterManager {
     }
 
     /**
-     * ⭐ ACTUALIZADO: Imprime ticket con tipo de vehículo
+     *  Imprime ticket con tipo de vehículo
      */
     private fun sendEscPosPrint(out: OutputStream, data: ReceiptData) {
         // Inicializar
@@ -84,7 +84,7 @@ object PrinterManager {
         // Encabezado
         out.write(byteArrayOf(0x1B, 0x61, 0x01)) // Centrar
         out.write(byteArrayOf(0x1B, 0x45, 0x01)) // Negrita
-        out.write("CEPA\n".utf8())
+        out.write("CENTRO PANAMERICANO DE OJOS\n".utf8())
         out.write("TICKET DE INGRESO\n".utf8())
         out.write(byteArrayOf(0x1B, 0x45, 0x00))
         out.write("============================\n".utf8())
@@ -100,7 +100,7 @@ object PrinterManager {
         val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         val timeFormatter = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
 
-        // ⭐ NUEVO: Tipo de Vehículo
+        //  Tipo de Vehículo
         out.write(byteArrayOf(0x1B, 0x45, 0x01)) // Negrita
         out.write("TIPO: ${data.vehicleType}\n".utf8())
         out.write(byteArrayOf(0x1B, 0x45, 0x00))
@@ -168,7 +168,7 @@ object PrinterManager {
     }
 
     /**
-     * ⭐ ACTUALIZADO: Incluye tipo de vehículo en texto de fallback
+     *  Incluye tipo de vehículo en texto de fallback
      */
     private fun buildReceiptText(data: ReceiptData): String {
         val dateFormatter = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
@@ -179,7 +179,7 @@ object PrinterManager {
             appendLine()
             appendLine("[CODE128: ${data.plate}]")
             appendLine()
-            appendLine("TIPO: ${data.vehicleType}")  // ⭐ NUEVO
+            appendLine("TIPO: ${data.vehicleType}")  // 
             appendLine()
             appendLine("PLACA: ${data.plate}")
             appendLine()

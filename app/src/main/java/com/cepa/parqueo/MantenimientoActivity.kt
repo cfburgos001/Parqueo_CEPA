@@ -25,7 +25,7 @@ class MantenimientoActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMantenimientoBinding
     private lateinit var databaseHelper: DatabaseHelper
     private lateinit var dispositivoManager: DispositivoManager
-    private lateinit var vehiculoRepository: VehiculoRepository  // ⭐ NUEVO
+    private lateinit var vehiculoRepository: VehiculoRepository  // 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,15 +34,15 @@ class MantenimientoActivity : AppCompatActivity() {
 
         databaseHelper = DatabaseHelper(this)
         dispositivoManager = DispositivoManager(this)
-        vehiculoRepository = VehiculoRepository(this)  // ⭐ NUEVO
+        vehiculoRepository = VehiculoRepository(this)  // 
 
         setupUI()
         loadServerConfig()
         loadDispositivoInfo()
         loadTiempoGraciaConfig()
         loadConfigCobrosPos()
-        loadModoCobro()  // ⭐ NUEVO
-        loadTarifas()    // ⭐ NUEVO
+        loadModoCobro()  // 
+        loadTarifas()    // 
     }
 
     private fun setupUI() {
@@ -63,12 +63,12 @@ class MantenimientoActivity : AppCompatActivity() {
             guardarConfigCobrosPos(isChecked)
         }
 
-        // ⭐ NUEVO: Switch para Modo de Cobro
+        //  Switch para Modo de Cobro
         binding.switchModoCobro.setOnCheckedChangeListener { _, isChecked ->
             cambiarModoCobro(isChecked)
         }
 
-        // ⭐ NUEVO: Botón para recargar tarifas
+        //  Botón para recargar tarifas
         binding.btnRecargarTarifas.setOnClickListener {
             loadTarifas()
         }
@@ -115,7 +115,7 @@ class MantenimientoActivity : AppCompatActivity() {
     }
 
     /**
-     * ⭐ NUEVO: Carga el modo de cobro actual (Escalonado/Sin Máximo)
+     *  Carga el modo de cobro actual (Escalonado/Sin Máximo)
      */
     private fun loadModoCobro() {
         lifecycleScope.launch {
@@ -147,7 +147,7 @@ class MantenimientoActivity : AppCompatActivity() {
     }
 
     /**
-     * ⭐ NUEVO: Actualiza el texto del estado del modo de cobro
+     *  Actualiza el texto del estado del modo de cobro
      */
     private fun actualizarTextoModoCobro(cobroIndefinido: Boolean, modoTexto: String) {
         binding.tvEstadoModoCobro.text = if (cobroIndefinido) {
@@ -166,7 +166,7 @@ class MantenimientoActivity : AppCompatActivity() {
     }
 
     /**
-     * ⭐ NUEVO: Cambia el modo de cobro
+     *  Cambia el modo de cobro
      */
     private fun cambiarModoCobro(cobroIndefinido: Boolean) {
         AlertDialog.Builder(this)
@@ -198,7 +198,7 @@ class MantenimientoActivity : AppCompatActivity() {
     }
 
     /**
-     * ⭐ NUEVO: Ejecuta el cambio de modo de cobro en BD
+     *  Ejecuta el cambio de modo de cobro en BD
      */
     private fun ejecutarCambioModoCobro(cobroIndefinido: Boolean) {
         binding.switchModoCobro.isEnabled = false
@@ -236,7 +236,7 @@ class MantenimientoActivity : AppCompatActivity() {
     }
 
     /**
-     * ⭐ NUEVO: Carga y muestra las tarifas actuales
+     *  Carga y muestra las tarifas actuales
      */
     private fun loadTarifas() {
         binding.progressBarTarifas?.visibility = View.VISIBLE

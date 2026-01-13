@@ -33,7 +33,7 @@ class IngresoVehiculoActivity : AppCompatActivity() {
 
     private var ultimoTicketImpreso: ReceiptData? = null
 
-    // ⭐ NUEVO: Lista de tarifas disponibles
+    //  Lista de tarifas disponibles
     private var tarifasDisponibles: List<TarifaDetalle> = emptyList()
     private var strRateKeySeleccionado: String = "A"  // Default: Auto
 
@@ -47,7 +47,7 @@ class IngresoVehiculoActivity : AppCompatActivity() {
 
         cargarDatosSesion()
         verificarTipoDispositivo()
-        cargarTarifas()  // ⭐ NUEVO
+        cargarTarifas()  // 
         setupUI()
     }
 
@@ -76,7 +76,7 @@ class IngresoVehiculoActivity : AppCompatActivity() {
     }
 
     /**
-     * ⭐ NUEVO: Carga las tarifas disponibles desde la BD
+     *  Carga las tarifas disponibles desde la BD
      */
     private fun cargarTarifas() {
         lifecycleScope.launch {
@@ -145,7 +145,7 @@ class IngresoVehiculoActivity : AppCompatActivity() {
     }
 
     /**
-     * ⭐ NUEVO: Actualiza la información de la tarifa seleccionada
+     *  Actualiza la información de la tarifa seleccionada
      */
     private fun actualizarInfoTarifa(position: Int) {
         if (position < tarifasDisponibles.size) {
@@ -184,7 +184,7 @@ class IngresoVehiculoActivity : AppCompatActivity() {
             }
         }
 
-        // ⭐ NUEVO: Listener para cambio de tipo de vehículo
+        //  Listener para cambio de tipo de vehículo
         binding.spinnerTipoVehiculo.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
                 actualizarInfoTarifa(position)
@@ -227,7 +227,7 @@ class IngresoVehiculoActivity : AppCompatActivity() {
                 usuario = nombreOperador,
                 idOperador = idOperador,
                 idDispositivo = idDispositivo,
-                strRateKey = strRateKeySeleccionado  // ⭐ NUEVO: Enviar tipo de vehículo
+                strRateKey = strRateKeySeleccionado  //  Enviar tipo de vehículo
             )
 
             when (result) {
@@ -250,7 +250,7 @@ class IngresoVehiculoActivity : AppCompatActivity() {
                         uniqueId = result.codigoBarras,
                         plate = placa,
                         entryTime = Date(),
-                        vehicleType = tipoVehiculoTexto  // ⭐ NUEVO
+                        vehicleType = tipoVehiculoTexto  // 
                     )
 
                     ultimoTicketImpreso = receiptData

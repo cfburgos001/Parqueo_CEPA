@@ -147,7 +147,7 @@ class SalidaVehiculoActivity : AppCompatActivity() {
     }
 
     /**
-     * ⭐ LÓGICA ACTUALIZADA:
+     *  LÓGICA ACTUALIZADA:
      * - Si cobros están HABILITADOS en POS: Evaluar pago y enviar a pantalla correspondiente
      * - Si cobros están DESHABILITADOS en POS: Ir directo a confirmación (sin pantalla de pago)
      * - SIEMPRE se valida tiempo de gracia en confirmación
@@ -163,11 +163,11 @@ class SalidaVehiculoActivity : AppCompatActivity() {
         val ahora = Date()
         val tiempoMinutos = ((ahora.time - vehiculo.fechaEntrada.time) / 60000).toInt()
 
-        // ⭐ VERIFICAR SI COBROS ESTÁN HABILITADOS EN ESTE POS
+        //  VERIFICAR SI COBROS ESTÁN HABILITADOS EN ESTE POS
         val cobrosHabilitados = dispositivoManager.estanCobrosHabilitados()
 
         if (!cobrosHabilitados) {
-            // ⭐ COBROS DESHABILITADOS: Ir directo a confirmación
+            //  COBROS DESHABILITADOS: Ir directo a confirmación
             // La confirmación SIEMPRE valida tiempo de gracia
             android.util.Log.d("SalidaVehiculo", "Cobros deshabilitados - Saltando pantalla de pago")
 
@@ -183,7 +183,7 @@ class SalidaVehiculoActivity : AppCompatActivity() {
             return
         }
 
-        // ⭐ COBROS HABILITADOS: Lógica normal de evaluación de pago
+        //  COBROS HABILITADOS: Lógica normal de evaluación de pago
         if (vehiculo.bitPaid != 1) {
             // NO HA PAGADO - Ir a pantalla de pago
             abrirPantallaPago(vehiculo, tiempoMinutos)
