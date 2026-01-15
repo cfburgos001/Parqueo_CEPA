@@ -54,7 +54,7 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <!-- ⭐ NUEVA: Activity Pago Vehículo -->
+        <!-- Activity Pago Vehículo -->
         <activity
             android:name="com.cepa.parqueo.PagoVehiculoActivity"
             android:exported="false"
@@ -63,6 +63,12 @@
         <!-- Activity Confirmación de Salida -->
         <activity
             android:name="com.cepa.parqueo.SalidaConfirmacionActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- ⭐ NUEVA: Activity Apertura/Cierre -->
+        <activity
+            android:name="com.cepa.parqueo.AperturaCierreActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 

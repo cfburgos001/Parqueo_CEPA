@@ -46,6 +46,11 @@ class HomeActivity : AppCompatActivity() {
             }
         }
 
+        // ⭐ NUEVO: Botón Apertura/Cierre
+        binding.btnAperturaCierre.setOnClickListener {
+            startActivity(Intent(this, AperturaCierreActivity::class.java))
+        }
+
         binding.btnMantenimiento.setOnClickListener {
             if (userType.canAccessMaintenance()) {
                 startActivity(Intent(this, MantenimientoActivity::class.java))

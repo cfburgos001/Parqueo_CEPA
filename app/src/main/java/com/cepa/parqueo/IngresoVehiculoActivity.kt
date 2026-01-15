@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
@@ -19,7 +20,7 @@ import kotlinx.coroutines.launch
 import java.util.Date
 
 /**
- * VERSIÓN 2: Con selector de tipo de vehículo (Auto/Moto/Camión)
+ * VERSIÓN 3: Con validación de apertura de caja
  */
 class IngresoVehiculoActivity : AppCompatActivity() {
 
@@ -33,9 +34,8 @@ class IngresoVehiculoActivity : AppCompatActivity() {
 
     private var ultimoTicketImpreso: ReceiptData? = null
 
-    //  Lista de tarifas disponibles
     private var tarifasDisponibles: List<TarifaDetalle> = emptyList()
-    private var strRateKeySeleccionado: String = "A"  // Default: Auto
+    private var strRateKeySeleccionado: String = "A"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,8 +47,55 @@ class IngresoVehiculoActivity : AppCompatActivity() {
 
         cargarDatosSesion()
         verificarTipoDispositivo()
-        cargarTarifas()  // 
+        cargarTarifas()
         setupUI()
+
+        // ⭐ VALIDAR APERTURA AL INICIAR
+        validarAperturaActiva()
+    }
+
+    /**
+     * ⭐ NUEVO: Validar que haya apertura antes de permitir operaciones
+     */
+    private fun validarAperturaActiva() {
+        binding.progressBar?.visibility = View.VISIBLE
+        binding.btnRegistrarEntrada.isEnabled = false
+        binding.etPlaca.isEnabled = false
+        binding.spinnerTipoVehiculo.isEnabled = false
+
+        lifecycleScope.launch {
+            val hayApertura = AperturaValidator.hayAperturaActiva(this@IngresoVehiculoActivity)
+
+            if (!hayApertura) {
+                // NO HAY APERTURA - Bloquear todo
+                mostrarDialogoSinApertura()
+                binding.progressBar?.visibility = View.GONE
+            } else {
+                // SÍ HAY APERTURA - Permitir operaciones
+                binding.btnRegistrarEntrada.isEnabled = true
+                binding.etPlaca.isEnabled = true
+                binding.spinnerTipoVehiculo.isEnabled = true
+                binding.progressBar?.visibility = View.GONE
+            }
+        }
+    }
+
+    /**
+     * ⭐ NUEVO: Mostrar diálogo cuando no hay apertura
+     */
+    private fun mostrarDialogoSinApertura() {
+        AlertDialog.Builder(this)
+            .setTitle("Apertura Requerida")
+            .setMessage(AperturaValidator.MENSAJE_SIN_APERTURA)
+            .setCancelable(false)
+            .setPositiveButton("Ir a Apertura/Cierre") { _, _ ->
+                // Cerrar esta activity y volver al home
+                finish()
+            }
+            .setNegativeButton("Salir") { _, _ ->
+                finish()
+            }
+            .show()
     }
 
     private fun verificarTipoDispositivo() {
@@ -75,21 +122,16 @@ class IngresoVehiculoActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     *  Carga las tarifas disponibles desde la BD
-     */
     private fun cargarTarifas() {
         lifecycleScope.launch {
             when (val result = vehiculoRepository.listarTarifas()) {
                 is ListaTarifasResult.Success -> {
                     tarifasDisponibles = result.tarifas
 
-                    // Crear lista de opciones para el Spinner
                     val opcionesTarifas = tarifasDisponibles.map { tarifa ->
                         "${tarifa.tipoTarifa} - $${String.format("%.2f", tarifa.precioPorHora)}/h"
                     }
 
-                    // Configurar Spinner
                     val adapter = ArrayAdapter(
                         this@IngresoVehiculoActivity,
                         android.R.layout.simple_spinner_item,
@@ -98,15 +140,13 @@ class IngresoVehiculoActivity : AppCompatActivity() {
                     adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                     binding.spinnerTipoVehiculo.adapter = adapter
 
-                    // Listener para cambio de selección
-                    binding.spinnerTipoVehiculo.setSelection(0)  // Auto por defecto
+                    binding.spinnerTipoVehiculo.setSelection(0)
                     strRateKeySeleccionado = if (tarifasDisponibles.isNotEmpty()) {
                         tarifasDisponibles[0].strRateKey
                     } else {
                         "A"
                     }
 
-                    // Actualizar texto de tarifa seleccionada
                     actualizarInfoTarifa(0)
                 }
                 is ListaTarifasResult.Error -> {
@@ -116,16 +156,12 @@ class IngresoVehiculoActivity : AppCompatActivity() {
                         Toast.LENGTH_LONG
                     ).show()
 
-                    // Configurar tarifas por defecto
                     configurarTarifasPorDefecto()
                 }
             }
         }
     }
 
-    /**
-     * Configura tarifas por defecto si no se pueden cargar de BD
-     */
     private fun configurarTarifasPorDefecto() {
         val opcionesDefault = listOf(
             "Vehículo Normal - $1.25/h",
@@ -144,9 +180,6 @@ class IngresoVehiculoActivity : AppCompatActivity() {
         strRateKeySeleccionado = "A"
     }
 
-    /**
-     *  Actualiza la información de la tarifa seleccionada
-     */
     private fun actualizarInfoTarifa(position: Int) {
         if (position < tarifasDisponibles.size) {
             val tarifa = tarifasDisponibles[position]
@@ -184,15 +217,12 @@ class IngresoVehiculoActivity : AppCompatActivity() {
             }
         }
 
-        //  Listener para cambio de tipo de vehículo
         binding.spinnerTipoVehiculo.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
                 actualizarInfoTarifa(position)
             }
 
-            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {
-                // No hacer nada
-            }
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
         }
 
         binding.btnRegistrarEntrada.setOnClickListener {
@@ -227,7 +257,7 @@ class IngresoVehiculoActivity : AppCompatActivity() {
                 usuario = nombreOperador,
                 idOperador = idOperador,
                 idDispositivo = idDispositivo,
-                strRateKey = strRateKeySeleccionado  //  Enviar tipo de vehículo
+                strRateKey = strRateKeySeleccionado
             )
 
             when (result) {
@@ -250,14 +280,14 @@ class IngresoVehiculoActivity : AppCompatActivity() {
                         uniqueId = result.codigoBarras,
                         plate = placa,
                         entryTime = Date(),
-                        vehicleType = tipoVehiculoTexto  // 
+                        vehicleType = tipoVehiculoTexto
                     )
 
                     ultimoTicketImpreso = receiptData
                     printReceipt(receiptData)
                     levantarPluma()
                     binding.etPlaca.text?.clear()
-                    binding.spinnerTipoVehiculo.setSelection(0)  // Reset a Auto
+                    binding.spinnerTipoVehiculo.setSelection(0)
                     binding.btnReimprimir.isEnabled = true
                 }
                 is RegistroEntradaResult.Error -> {

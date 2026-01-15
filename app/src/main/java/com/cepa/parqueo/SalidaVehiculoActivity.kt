@@ -3,6 +3,7 @@ package com.cepa.parqueo
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
@@ -17,8 +18,7 @@ import java.util.Date
 
 /**
  * Activity para registrar salida de vehículos
- * ACTUALIZADO: Respeta configuración de cobros habilitados/deshabilitados en POS
- * SIEMPRE valida tiempo de gracia, independientemente de la configuración de cobros
+ * VERSIÓN 2: Con validación de apertura de caja
  */
 class SalidaVehiculoActivity : AppCompatActivity() {
 
@@ -36,6 +36,50 @@ class SalidaVehiculoActivity : AppCompatActivity() {
 
         verificarTipoDispositivo()
         setupUI()
+
+        // ⭐ VALIDAR APERTURA AL INICIAR
+        validarAperturaActiva()
+    }
+
+    /**
+     * ⭐ NUEVO: Validar que haya apertura antes de permitir operaciones
+     */
+    private fun validarAperturaActiva() {
+        binding.btnRegistrarPorPlaca.isEnabled = false
+        binding.btnEscanearQR.isEnabled = false
+        binding.etPlaca.isEnabled = false
+
+        lifecycleScope.launch {
+            val hayApertura = AperturaValidator.hayAperturaActiva(this@SalidaVehiculoActivity)
+
+            if (!hayApertura) {
+                // NO HAY APERTURA - Bloquear todo
+                mostrarDialogoSinApertura()
+            } else {
+                // SÍ HAY APERTURA - Permitir operaciones
+                binding.btnRegistrarPorPlaca.isEnabled = true
+                binding.btnEscanearQR.isEnabled = true
+                binding.etPlaca.isEnabled = true
+            }
+        }
+    }
+
+    /**
+     * ⭐ NUEVO: Mostrar diálogo cuando no hay apertura
+     */
+    private fun mostrarDialogoSinApertura() {
+        AlertDialog.Builder(this)
+            .setTitle("Apertura Requerida")
+            .setMessage(AperturaValidator.MENSAJE_SIN_APERTURA)
+            .setCancelable(false)
+            .setPositiveButton("Ir a Apertura/Cierre") { _, _ ->
+                // Cerrar esta activity y volver al home
+                finish()
+            }
+            .setNegativeButton("Salir") { _, _ ->
+                finish()
+            }
+            .show()
     }
 
     private fun verificarTipoDispositivo() {
@@ -146,12 +190,6 @@ class SalidaVehiculoActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     *  LÓGICA ACTUALIZADA:
-     * - Si cobros están HABILITADOS en POS: Evaluar pago y enviar a pantalla correspondiente
-     * - Si cobros están DESHABILITADOS en POS: Ir directo a confirmación (sin pantalla de pago)
-     * - SIEMPRE se valida tiempo de gracia en confirmación
-     */
     private fun procesarVehiculo(vehiculo: VehiculoDB) {
         android.util.Log.d("SalidaVehiculo", "=== DATOS DEL VEHÍCULO ===")
         android.util.Log.d("SalidaVehiculo", "Placa: ${vehiculo.placa}")
@@ -163,12 +201,9 @@ class SalidaVehiculoActivity : AppCompatActivity() {
         val ahora = Date()
         val tiempoMinutos = ((ahora.time - vehiculo.fechaEntrada.time) / 60000).toInt()
 
-        //  VERIFICAR SI COBROS ESTÁN HABILITADOS EN ESTE POS
         val cobrosHabilitados = dispositivoManager.estanCobrosHabilitados()
 
         if (!cobrosHabilitados) {
-            //  COBROS DESHABILITADOS: Ir directo a confirmación
-            // La confirmación SIEMPRE valida tiempo de gracia
             android.util.Log.d("SalidaVehiculo", "Cobros deshabilitados - Saltando pantalla de pago")
 
             Toast.makeText(
@@ -183,22 +218,15 @@ class SalidaVehiculoActivity : AppCompatActivity() {
             return
         }
 
-        //  COBROS HABILITADOS: Lógica normal de evaluación de pago
         if (vehiculo.bitPaid != 1) {
-            // NO HA PAGADO - Ir a pantalla de pago
             abrirPantallaPago(vehiculo, tiempoMinutos)
         } else {
-            // YA PAGÓ - Ir directo a confirmación
-            // (La confirmación evaluará el tiempo de gracia)
             abrirConfirmacionSalida(vehiculo, tiempoMinutos)
         }
 
         binding.btnRegistrarPorPlaca.isEnabled = true
     }
 
-    /**
-     * Abre pantalla de pago
-     */
     private fun abrirPantallaPago(vehiculo: VehiculoDB, tiempoMinutos: Int) {
         val intent = Intent(this, PagoVehiculoActivity::class.java)
         intent.putExtra("VEHICULO_ID", vehiculo.id)
@@ -213,10 +241,6 @@ class SalidaVehiculoActivity : AppCompatActivity() {
         startActivityForResult(intent, REQUEST_CODE_PAGO)
     }
 
-    /**
-     * Abre confirmación de salida
-     * SIEMPRE valida tiempo de gracia, independientemente de si cobros están habilitados
-     */
     private fun abrirConfirmacionSalida(vehiculo: VehiculoDB, tiempoMinutos: Int) {
         val intent = Intent(this, SalidaConfirmacionActivity::class.java)
         intent.putExtra("VEHICULO_ID", vehiculo.id)
