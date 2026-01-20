@@ -242,6 +242,93 @@ class AperturaCierreActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * ⭐ NUEVO: Confirmar generación de Reporte X
+     */
+    private fun confirmarReporteX() {
+        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val horaActual = timeFormat.format(Date())
+
+        AlertDialog.Builder(this)
+            .setTitle("Confirmar Reporte X")
+            .setMessage(
+                "¿Desea generar un REPORTE X (informativo)?\n\n" +
+                        "• Este reporte NO cierra la caja\n" +
+                        "• Muestra el estado actual de ventas\n" +
+                        "• La caja permanecerá abierta\n\n" +
+                        "Operador: $nombreOperador\n" +
+                        "Hora: $horaActual"
+            )
+            .setPositiveButton("Generar Reporte X") { _, _ ->
+                ejecutarReporteX()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    /**
+     * ⭐ NUEVO: Ejecutar generación de Reporte X
+     */
+    private fun ejecutarReporteX() {
+        binding.btnReporteX.isEnabled = false
+        binding.progressBar.visibility = View.VISIBLE
+
+        lifecycleScope.launch {
+            when (val result = repository.generarReporteX(idOperador, nombreOperador, idDispositivo)) {
+                is CierreResult.Success -> {
+                    Toast.makeText(
+                        this@AperturaCierreActivity,
+                        "✓ ${result.mensaje}\n\nLa caja permanece ABIERTA",
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    // Imprimir ticket de Reporte X
+                    imprimirTicketReporteX(result)
+
+                    // NO actualizar UI (la caja sigue abierta)
+                    binding.btnReporteX.isEnabled = true
+                    binding.progressBar.visibility = View.GONE
+                }
+                is CierreResult.Error -> {
+                    Toast.makeText(
+                        this@AperturaCierreActivity,
+                        "✗ Error: ${result.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    binding.btnReporteX.isEnabled = true
+                    binding.progressBar.visibility = View.GONE
+                }
+            }
+        }
+    }
+
+    /**
+     * ⭐ NUEVO: Imprimir ticket de Reporte X
+     */
+    private fun imprimirTicketReporteX(reporte: CierreResult.Success) {
+        try {
+            val ticketData = CierreTicketData(
+                operador = nombreOperador,
+                fechaApertura = reporte.fechaApertura,
+                fechaCierre = reporte.fechaOperacion,
+                montoTotal = reporte.montoTotal,
+                cantidadVehiculos = reporte.cantidadVehiculos,
+                vehiculosDentro = reporte.vehiculosDentro,
+                vehiculosDentroDetalle = reporte.vehiculosDentroDetalle
+            )
+
+            // Usar el printer específico para Reporte X
+            com.cepa.parqueo.printer.ReporteXTicketPrinter.printReporteX(this, ticketData)
+
+            Toast.makeText(this, "✓ Reporte X impreso", Toast.LENGTH_SHORT).show()
+
+        } catch (e: Exception) {
+            Toast.makeText(this, "⚠ Error al imprimir: ${e.message}", Toast.LENGTH_LONG).show()
+            e.printStackTrace()
+        }
+    }
+
     override fun onSupportNavigateUp(): Boolean {
         onBackPressed()
         return true
