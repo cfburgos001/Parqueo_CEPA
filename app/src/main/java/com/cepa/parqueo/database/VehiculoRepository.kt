@@ -438,60 +438,49 @@ class VehiculoRepository(private val context: Context) {
         }
     }
 
+    /**
+     * Registra la salida de un vehículo usando el SP
+     * CORREGIDO:  Ahora usa IOT_sp_RegistrarSalida para que se registre el log
+     */
     suspend fun registrarSalida(placa: String, idDispositivo: String): SalidaResult {
         return withContext(Dispatchers.IO) {
             var connection: Connection? = null
             try {
-                connection = dbHelper.getConnection()
+                connection = dbHelper. getConnection()
 
                 if (connection == null) {
                     return@withContext SalidaResult.Error("No se pudo conectar a la base de datos")
                 }
 
-                val sqlGetId = """
-                SELECT TOP 1 ISNULL(IdExitDevice, 2) AS IdExitDevice
-                FROM IOT_Dispositivos
-                WHERE IdDispositivo = ?
-            """
+                // ✅ USAR EL STORED PROCEDURE
+                val sql = "{CALL dbo.IOT_sp_RegistrarSalida(?, ?)}"
+                val callableStatement = connection.prepareCall(sql)
+                callableStatement.setString(1, placa)
+                callableStatement.setString(2, idDispositivo)
 
-                val stmtGetId = connection.prepareStatement(sqlGetId)
-                stmtGetId.setString(1, idDispositivo)
-                val rsId = stmtGetId.executeQuery()
+                val resultSet = callableStatement.executeQuery()
 
-                var idExitDevice = 2
-                if (rsId.next()) {
-                    idExitDevice = rsId.getInt("IdExitDevice")
-                }
-                rsId.close()
-                stmtGetId.close()
+                if (resultSet.next()) {
+                    val filasAfectadas = resultSet. getInt("FilasAfectadas")
 
-                val sql = """
-                UPDATE dbo.IOT_Vehiculos
-                SET 
-                    FechaSalida = GETDATE(),
-                    TiempoEstancia = DATEDIFF(MINUTE, FechaEntrada, GETDATE()),
-                    Estado = 'SALIO',
-                    IdDispositivoSalida = ?,
-                    IdExitDevice = ?,
-                    bitExit = 1
-                WHERE Placa = ? 
-                  AND Estado = 'DENTRO'
-            """
+                    // Manejar posible null en IdDispositivoSalida
+                    val idDispositivoSalida = resultSet.getString("IdDispositivoSalida") ?: idDispositivo
 
-                val preparedStatement = connection.prepareStatement(sql)
-                preparedStatement.setString(1, idDispositivo)
-                preparedStatement.setInt(2, idExitDevice)
-                preparedStatement.setString(3, placa)
+                    resultSet.close()
+                    callableStatement.close()
 
-                val filasAfectadas = preparedStatement.executeUpdate()
-                preparedStatement.close()
-
-                if (filasAfectadas > 0) {
-                    Log.d(TAG, "✓ Salida registrada - Placa: $placa, IdExitDevice: $idExitDevice")
-                    SalidaResult.Success("Salida registrada correctamente", idDispositivo)
+                    if (filasAfectadas > 0) {
+                        Log.d(TAG, "✓ Salida registrada - Placa: $placa, Dispositivo: $idDispositivoSalida")
+                        SalidaResult.Success("Salida registrada correctamente", idDispositivoSalida)
+                    } else {
+                        Log.d(TAG, "✗ No se encontró vehículo para salida:  $placa")
+                        SalidaResult.Error("No se encontró el vehículo en el sistema")
+                    }
                 } else {
-                    Log.d(TAG, "✗ No se encontró vehículo para salida: $placa")
-                    SalidaResult.Error("No se encontró el vehículo en el sistema")
+                    resultSet.close()
+                    callableStatement.close()
+                    Log.d(TAG, "✗ No se obtuvo respuesta del SP")
+                    SalidaResult.Error("No se obtuvo respuesta del servidor")
                 }
 
             } catch (e: SQLException) {
