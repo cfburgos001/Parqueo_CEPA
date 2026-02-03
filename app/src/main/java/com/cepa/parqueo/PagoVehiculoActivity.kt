@@ -19,7 +19,7 @@ import java.util.Locale
 
 /**
  * Activity para procesar el pago de un vehículo desde la app
- * Reemplaza la funcionalidad de PayStation
+ * VERSIÓN 2: Usuario CAJA no va a confirmación de salida después del pago
  */
 class PagoVehiculoActivity : AppCompatActivity() {
 
@@ -31,7 +31,8 @@ class PagoVehiculoActivity : AppCompatActivity() {
     private var tiempoCobrableMinutos: Int = 0
     private var estadoCobro: String = ""
     private var strRateKey: String = "A"
-    private var operationType: Int = 1  //  1=Efectivo (default), 2=Tarjeta
+    private var operationType: Int = 1  // 1=Efectivo (default), 2=Tarjeta
+    private var esUsuarioCaja: Boolean = false // ⭐ NUEVO
 
     companion object {
         private const val TAG = "PagoVehiculo"
@@ -58,6 +59,7 @@ class PagoVehiculoActivity : AppCompatActivity() {
         val bitPaid = intent.getIntExtra("BIT_PAID", 0)
         val monto = intent.getDoubleExtra("MONTO", 0.0)
         val fechaPago = intent.getLongExtra("FECHA_PAGO", 0L)
+        esUsuarioCaja = intent.getBooleanExtra("ES_USUARIO_CAJA", false) // ⭐ NUEVO
 
         vehiculo = VehiculoDB(
             id = vehiculoId,
@@ -69,6 +71,8 @@ class PagoVehiculoActivity : AppCompatActivity() {
             fechaPago = if (fechaPago > 0) Date(fechaPago) else null,
             monto = monto
         )
+
+        Log.d(TAG, "Es usuario CAJA: $esUsuarioCaja")
     }
 
     private fun setupUI() {
@@ -164,7 +168,7 @@ class PagoVehiculoActivity : AppCompatActivity() {
         // Monto
         binding.tvMonto.text = String.format("$%.2f", calculo.montoCalculado)
 
-        //  Mostrar desglose de tarifa escalonada
+        // Mostrar desglose de tarifa escalonada
         binding.tvTarifa.text = buildString {
             append("1h: ${String.format("%.2f", calculo.precioPorHora)}")
             append(" | 2h: $2.50")
@@ -189,7 +193,7 @@ class PagoVehiculoActivity : AppCompatActivity() {
                 binding.btnProcesarPago.text = "Continuar Sin Cobro"
                 binding.btnProcesarPago.isEnabled = true
 
-                //  Cambiar el monto a 0 para registrar gratis
+                // Cambiar el monto a 0 para registrar gratis
                 montoCalculado = 0.0
             }
 
@@ -205,7 +209,7 @@ class PagoVehiculoActivity : AppCompatActivity() {
                 binding.btnProcesarPago.text = "Continuar Sin Cobro"
                 binding.btnProcesarPago.isEnabled = true
 
-                //  Ya pagó, no cobrar adicional
+                // Ya pagó, no cobrar adicional
                 montoCalculado = 0.0
             }
 
@@ -243,25 +247,25 @@ class PagoVehiculoActivity : AppCompatActivity() {
                 binding.btnProcesarPago.text = "Continuar Sin Cobro"
                 binding.btnProcesarPago.isEnabled = true
 
-                //  Sin cargo
+                // Sin cargo
                 montoCalculado = 0.0
             }
         }
     }
 
     private fun procesarPago() {
-        //  Si no hay monto a cobrar (gracia o gratis), registrar pago de $0.00
+        // Si no hay monto a cobrar (gracia o gratis), registrar pago de $0.00
         if (montoCalculado <= 0) {
             ejecutarRegistroPagoGratis()
             return
         }
 
-        //  MOSTRAR SELECTOR DE MÉTODO DE PAGO
+        // MOSTRAR SELECTOR DE MÉTODO DE PAGO
         mostrarSelectorMetodoPago()
     }
 
     /**
-     *  Muestra diálogo para seleccionar método de pago
+     * Muestra diálogo para seleccionar método de pago
      */
     private fun mostrarSelectorMetodoPago() {
         val opciones = arrayOf(
@@ -286,7 +290,7 @@ class PagoVehiculoActivity : AppCompatActivity() {
     }
 
     /**
-     *  ACTUALIZADO: Confirmación de pago con método seleccionado
+     * Confirmación de pago con método seleccionado
      */
     private fun mostrarConfirmacionPago() {
         val metodoTexto = when (operationType) {
@@ -317,7 +321,7 @@ class PagoVehiculoActivity : AppCompatActivity() {
     }
 
     /**
-     *  Registra pago de $0.00 para casos de gracia/gratis
+     * Registra pago de $0.00 para casos de gracia/gratis
      */
     private fun ejecutarRegistroPagoGratis() {
         binding.btnProcesarPago.isEnabled = false
@@ -333,7 +337,7 @@ class PagoVehiculoActivity : AppCompatActivity() {
                 monto = 0.00,
                 idPayDevice = idNumerico,
                 strRateKey = strRateKey,
-                operationType = 1  //  Gratis siempre es efectivo
+                operationType = 1  // Gratis siempre es efectivo
             )
 
             binding.progressBar.visibility = View.GONE
@@ -346,7 +350,12 @@ class PagoVehiculoActivity : AppCompatActivity() {
                         Toast.LENGTH_SHORT
                     ).show()
 
-                    irAConfirmacionSalida()
+                    // ⭐ CAJA: Solo terminar, NO ir a confirmación
+                    if (esUsuarioCaja) {
+                        finalizarParaCaja()
+                    } else {
+                        irAConfirmacionSalida()
+                    }
                 }
                 is com.cepa.parqueo.database.PagoResult.Error -> {
                     Toast.makeText(
@@ -377,7 +386,7 @@ class PagoVehiculoActivity : AppCompatActivity() {
                 monto = montoCalculado,
                 idPayDevice = idNumerico,
                 strRateKey = strRateKey,
-                operationType = operationType  //  Usar método seleccionado
+                operationType = operationType  // Usar método seleccionado
             )
 
             binding.progressBar.visibility = View.GONE
@@ -400,8 +409,12 @@ class PagoVehiculoActivity : AppCompatActivity() {
 
                     Log.d(TAG, "Pago registrado - ID: ${result.idVehiculo}, Monto: ${result.montoRegistrado}, Tipo: $operationType")
 
-                    // Ir a confirmación de salida
-                    irAConfirmacionSalida()
+                    // ⭐ CAJA: Solo terminar, NO ir a confirmación
+                    if (esUsuarioCaja) {
+                        finalizarParaCaja()
+                    } else {
+                        irAConfirmacionSalida()
+                    }
                 }
                 is com.cepa.parqueo.database.PagoResult.Error -> {
                     Toast.makeText(
@@ -415,6 +428,20 @@ class PagoVehiculoActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    /**
+     * ⭐ NUEVO: Finalizar para usuario CAJA (NO va a confirmación de salida)
+     */
+    private fun finalizarParaCaja() {
+        Toast.makeText(
+            this,
+            "✓ Pago procesado\nEl operador debe validar la salida.",
+            Toast.LENGTH_LONG
+        ).show()
+
+        setResult(RESULT_OK)
+        finish()
     }
 
     private fun irAConfirmacionSalida() {

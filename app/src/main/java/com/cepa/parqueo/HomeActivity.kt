@@ -40,13 +40,16 @@ class HomeActivity : AppCompatActivity() {
 
         binding.btnSalidaVehiculo.setOnClickListener {
             if (userType.canAccessExit()) {
-                startActivity(Intent(this, SalidaVehiculoActivity::class.java))
+                // Pasar el tipo de usuario a SalidaVehiculoActivity
+                val intent = Intent(this, SalidaVehiculoActivity::class.java)
+                intent.putExtra("USER_TYPE", userType.name)
+                startActivity(intent)
             } else {
                 showNoPermissionDialog()
             }
         }
 
-        // ⭐ NUEVO: Botón Apertura/Cierre
+        // Botón Apertura/Cierre - Visible para todos
         binding.btnAperturaCierre.setOnClickListener {
             startActivity(Intent(this, AperturaCierreActivity::class.java))
         }
@@ -65,8 +68,14 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun applyPermissions() {
+        // Ocultar Mantenimiento si no es ADMINISTRADOR
         if (!userType.canAccessMaintenance()) {
             binding.btnMantenimiento.visibility = View.GONE
+        }
+
+        // ⭐ NUEVO: Si es CAJA, ocultar botón de Ingreso
+        if (!userType.canAccessEntry()) {
+            binding.btnIngresoVehiculo.visibility = View.GONE
         }
     }
 
@@ -83,7 +92,9 @@ class HomeActivity : AppCompatActivity() {
                 }
                 R.id.nav_salida -> {
                     if (userType.canAccessExit()) {
-                        startActivity(Intent(this, SalidaVehiculoActivity::class.java))
+                        val intent = Intent(this, SalidaVehiculoActivity::class.java)
+                        intent.putExtra("USER_TYPE", userType.name)
+                        startActivity(intent)
                     } else {
                         showNoPermissionDialog()
                     }
@@ -104,8 +115,14 @@ class HomeActivity : AppCompatActivity() {
 
         binding.bottomNavigation.selectedItemId = R.id.nav_home
 
+        // Ocultar opciones del menú inferior según permisos
         if (!userType.canAccessMaintenance()) {
             binding.bottomNavigation.menu.removeItem(R.id.nav_mantenimiento)
+        }
+
+        // ⭐ NUEVO: Si es CAJA, ocultar opción de Ingreso del menú inferior
+        if (!userType.canAccessEntry()) {
+            binding.bottomNavigation.menu.removeItem(R.id.nav_ingreso)
         }
     }
 

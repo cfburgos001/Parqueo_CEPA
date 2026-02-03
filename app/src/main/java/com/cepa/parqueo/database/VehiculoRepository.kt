@@ -708,6 +708,137 @@ class VehiculoRepository(private val context: Context) {
             }
         }
     }
+    /**
+     * Registra una salida sin cobro (cortesía) usando IOT_sp_RegistrarSalidaSinCobro
+     * Cambia la tarifa a Z ($0.00) y registra la salida
+     */
+    suspend fun registrarSalidaSinCobro(
+        placa: String,
+        idDispositivo: String,
+        idOperador: Int,
+        motivo: String = "Cortesía"
+    ): SalidaSinCobroResult {
+        return withContext(Dispatchers.IO) {
+            var connection: Connection? = null
+            try {
+                connection = dbHelper.getConnection()
+
+                if (connection == null) {
+                    return@withContext SalidaSinCobroResult.Error("No se pudo conectar a la base de datos")
+                }
+
+                val sql = "{CALL dbo.IOT_sp_RegistrarSalidaSinCobro(?, ?, ?, ?)}"
+                val callableStatement = connection.prepareCall(sql)
+                callableStatement.setString(1, placa)
+                callableStatement.setString(2, idDispositivo)
+                callableStatement.setInt(3, idOperador)
+                callableStatement.setString(4, motivo)
+
+                val resultSet = callableStatement.executeQuery()
+
+                if (resultSet.next()) {
+                    val exitoso = resultSet.getInt("Exitoso")
+                    val mensaje = resultSet.getString("Mensaje")
+
+                    if (exitoso == 1) {
+                        val idVehiculo = resultSet.getInt("IdVehiculo")
+                        val idDispositivoSalida = resultSet.getString("IdDispositivoSalida") ?: idDispositivo
+
+                        resultSet.close()
+                        callableStatement.close()
+
+                        Log.d(TAG, "✓ Salida sin cobro registrada - Placa: $placa")
+                        SalidaSinCobroResult.Success(mensaje, idVehiculo, idDispositivoSalida)
+                    } else {
+                        resultSet.close()
+                        callableStatement.close()
+
+                        Log.d(TAG, "✗ Error en salida sin cobro: $mensaje")
+                        SalidaSinCobroResult.Error(mensaje)
+                    }
+                } else {
+                    resultSet.close()
+                    callableStatement.close()
+                    SalidaSinCobroResult.Error("No se obtuvo respuesta del servidor")
+                }
+
+            } catch (e: SQLException) {
+                Log.e(TAG, "Error SQL al registrar salida sin cobro", e)
+                SalidaSinCobroResult.Error("Error SQL: ${e.message}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error al registrar salida sin cobro", e)
+                SalidaSinCobroResult.Error("Error: ${e.message}")
+            } finally {
+                dbHelper.closeConnection(connection)
+            }
+        }
+    }
+    /**
+     * Registra un pago sin cobro (cortesía) usando IOT_sp_MarcarPagoSinCobro
+     * Cambia la tarifa a Z ($0.00) y marca como pagado
+     * NO registra salida, NO abre pluma - eso lo hace el operador después
+     */
+    suspend fun marcarPagoSinCobro(
+        placa: String,
+        idPayDevice: Int,
+        idOperador: Int,
+        motivo: String = "Cortesía"
+    ): PagoSinCobroResult {
+        return withContext(Dispatchers.IO) {
+            var connection: Connection? = null
+            try {
+                connection = dbHelper.getConnection()
+
+                if (connection == null) {
+                    return@withContext PagoSinCobroResult.Error("No se pudo conectar a la base de datos")
+                }
+
+                val sql = "{CALL dbo.IOT_sp_MarcarPagoSinCobro(?, ?, ?, ?)}"
+                val callableStatement = connection.prepareCall(sql)
+                callableStatement.setString(1, placa)
+                callableStatement.setInt(2, idPayDevice)
+                callableStatement.setInt(3, idOperador)
+                callableStatement.setString(4, motivo)
+
+                val resultSet = callableStatement.executeQuery()
+
+                if (resultSet.next()) {
+                    val exitoso = resultSet.getInt("Exitoso")
+                    val mensaje = resultSet.getString("Mensaje")
+
+                    if (exitoso == 1) {
+                        val idVehiculo = resultSet.getInt("IdVehiculo")
+                        val idPayDeviceResult = resultSet.getInt("IdPayDevice")
+
+                        resultSet.close()
+                        callableStatement.close()
+
+                        Log.d(TAG, "✓ Pago sin cobro registrado - Placa: $placa, IdPayDevice: $idPayDeviceResult")
+                        PagoSinCobroResult.Success(mensaje, idVehiculo, idPayDeviceResult)
+                    } else {
+                        resultSet.close()
+                        callableStatement.close()
+
+                        Log.d(TAG, "✗ Error en pago sin cobro: $mensaje")
+                        PagoSinCobroResult.Error(mensaje)
+                    }
+                } else {
+                    resultSet.close()
+                    callableStatement.close()
+                    PagoSinCobroResult.Error("No se obtuvo respuesta del servidor")
+                }
+
+            } catch (e: SQLException) {
+                Log.e(TAG, "Error SQL al registrar pago sin cobro", e)
+                PagoSinCobroResult.Error("Error SQL: ${e.message}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error al registrar pago sin cobro", e)
+                PagoSinCobroResult.Error("Error: ${e.message}")
+            } finally {
+                dbHelper.closeConnection(connection)
+            }
+        }
+    }
 }
 
 // ===== DATA CLASSES =====
@@ -842,4 +973,28 @@ sealed class ModoCobroResult {
 sealed class ListaTarifasResult {
     data class Success(val tarifas: List<TarifaDetalle>) : ListaTarifasResult()
     data class Error(val message: String) : ListaTarifasResult()
+}
+/**
+ * Resultado de salida sin cobro
+ */
+sealed class SalidaSinCobroResult {
+    data class Success(
+        val mensaje: String,
+        val idVehiculo: Int,
+        val idDispositivoSalida: String
+    ) : SalidaSinCobroResult()
+
+    data class Error(val message: String) : SalidaSinCobroResult()
+}
+/**
+ * Resultado de pago sin cobro (cortesía)
+ */
+sealed class PagoSinCobroResult {
+    data class Success(
+        val mensaje: String,
+        val idVehiculo: Int,
+        val idPayDevice: Int
+    ) : PagoSinCobroResult()
+
+    data class Error(val message: String) : PagoSinCobroResult()
 }

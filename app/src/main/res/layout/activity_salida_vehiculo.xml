@@ -84,7 +84,33 @@
                 android:text="Escanear Código de Barras o QR"
                 android:textSize="16sp"
                 app:cornerRadius="12dp"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_marginBottom="32dp"/>
+
+            <!-- Botón de Pago Sin Cobro (solo visible para CAJA) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSalidaSinCobro"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:text="🎁 Registrar Pago Sin Cobro"
+                android:textSize="16sp"
+                app:cornerRadius="12dp"
+                app:backgroundTint="#9C27B0"
+                android:visibility="gone"
+                android:layout_marginTop="16dp"/>
+
+            <!-- Texto informativo para el botón de cortesía -->
+            <TextView
+                android:id="@+id/tvInfoSinCobro"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Para proveedores y visitas. Solo marca como pagado.\nEl operador debe validar la salida."
+                android:textSize="12sp"
+                android:textAlignment="center"
+                android:textColor="#757575"
+                android:visibility="gone"
+                android:layout_marginTop="8dp"/>
+
         </LinearLayout>
     </ScrollView>
 </LinearLayout>
