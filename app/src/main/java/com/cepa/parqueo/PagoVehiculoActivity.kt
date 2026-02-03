@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import com.cepa.parqueo.database.VehiculoDB
 import com.cepa.parqueo.database.VehiculoRepository
 import com.cepa.parqueo.databinding.ActivityPagoVehiculoBinding
+import com.cepa.parqueo.printer.PagoTicketPrinter
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -19,7 +20,7 @@ import java.util.Locale
 
 /**
  * Activity para procesar el pago de un vehículo desde la app
- * VERSIÓN 2: Usuario CAJA no va a confirmación de salida después del pago
+ * VERSIÓN 4: Solo imprime ticket cuando hay pago real (no en periodo de gracia)
  */
 class PagoVehiculoActivity : AppCompatActivity() {
 
@@ -28,11 +29,14 @@ class PagoVehiculoActivity : AppCompatActivity() {
 
     private lateinit var vehiculo: VehiculoDB
     private var montoCalculado: Double = 0.0
+    private var tiempoTotalMinutos: Int = 0
     private var tiempoCobrableMinutos: Int = 0
     private var estadoCobro: String = ""
     private var strRateKey: String = "A"
     private var operationType: Int = 1  // 1=Efectivo (default), 2=Tarjeta
-    private var esUsuarioCaja: Boolean = false // ⭐ NUEVO
+    private var esUsuarioCaja: Boolean = false
+    private var nombreOperador: String = ""
+    private var idDispositivo: String = ""
 
     companion object {
         private const val TAG = "PagoVehiculo"
@@ -46,9 +50,18 @@ class PagoVehiculoActivity : AppCompatActivity() {
 
         vehiculoRepository = VehiculoRepository(this)
 
+        cargarDatosSesion()
         cargarDatosIntent()
         setupUI()
         cargarCalculoMonto()
+    }
+
+    private fun cargarDatosSesion() {
+        val sharedPref = getSharedPreferences("ParkingSession", MODE_PRIVATE)
+        nombreOperador = sharedPref.getString("nombre_completo", "Operador") ?: "Operador"
+
+        val devicePref = getSharedPreferences("DeviceConfig", MODE_PRIVATE)
+        idDispositivo = devicePref.getString("device_id", "POS-001") ?: "POS-001"
     }
 
     private fun cargarDatosIntent() {
@@ -59,7 +72,7 @@ class PagoVehiculoActivity : AppCompatActivity() {
         val bitPaid = intent.getIntExtra("BIT_PAID", 0)
         val monto = intent.getDoubleExtra("MONTO", 0.0)
         val fechaPago = intent.getLongExtra("FECHA_PAGO", 0L)
-        esUsuarioCaja = intent.getBooleanExtra("ES_USUARIO_CAJA", false) // ⭐ NUEVO
+        esUsuarioCaja = intent.getBooleanExtra("ES_USUARIO_CAJA", false)
 
         vehiculo = VehiculoDB(
             id = vehiculoId,
@@ -99,17 +112,15 @@ class PagoVehiculoActivity : AppCompatActivity() {
                     val calculo = result.calculo
 
                     montoCalculado = calculo.montoCalculado
+                    tiempoTotalMinutos = calculo.tiempoTotalMinutos
                     tiempoCobrableMinutos = calculo.tiempoCobrableMinutos
                     estadoCobro = calculo.estadoCobro
 
-                    // Obtener strRateKey desde la tarifa
                     strRateKey = obtenerStrRateKey()
 
                     mostrarInformacion(calculo)
 
                     binding.progressBar.visibility = View.GONE
-
-                    // Habilitar botón siempre (con texto diferente según estado)
                     binding.btnProcesarPago.isEnabled = true
                 }
                 is com.cepa.parqueo.database.CalculoMontoResult.Error -> {
@@ -126,28 +137,18 @@ class PagoVehiculoActivity : AppCompatActivity() {
     }
 
     private suspend fun obtenerStrRateKey(): String {
-        // Obtener la tarifa actual y su strRateKey
         return when (val result = vehiculoRepository.obtenerTarifa()) {
-            is com.cepa.parqueo.database.TarifaResult.Success -> {
-                // Por defecto 'A' para tarifa normal
-                "A"
-            }
-            is com.cepa.parqueo.database.TarifaResult.Error -> {
-                "A" // Default
-            }
+            is com.cepa.parqueo.database.TarifaResult.Success -> "A"
+            is com.cepa.parqueo.database.TarifaResult.Error -> "A"
         }
     }
 
     private fun mostrarInformacion(calculo: com.cepa.parqueo.database.CalculoMonto) {
         val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
 
-        // Placa
         binding.tvPlaca.text = vehiculo.placa
-
-        // Fecha de Entrada
         binding.tvFechaEntrada.text = dateFormat.format(vehiculo.fechaEntrada)
 
-        // Tiempo Total
         val totalHoras = calculo.tiempoTotalMinutos / 60
         val totalMinutos = calculo.tiempoTotalMinutos % 60
         binding.tvTiempoTotal.text = if (totalHoras > 0) {
@@ -156,7 +157,6 @@ class PagoVehiculoActivity : AppCompatActivity() {
             "$totalMinutos minutos"
         }
 
-        // Tiempo Cobrable
         val cobrableHoras = calculo.tiempoCobrableMinutos / 60
         val cobrableMinutos = calculo.tiempoCobrableMinutos % 60
         binding.tvTiempoCobrable.text = if (cobrableHoras > 0) {
@@ -165,56 +165,44 @@ class PagoVehiculoActivity : AppCompatActivity() {
             "$cobrableMinutos minutos"
         }
 
-        // Monto
         binding.tvMonto.text = String.format("$%.2f", calculo.montoCalculado)
 
-        // Mostrar desglose de tarifa escalonada
         binding.tvTarifa.text = buildString {
             append("1h: ${String.format("%.2f", calculo.precioPorHora)}")
             append(" | 2h: $2.50")
             append(" | +2h: $3.75/día")
         }
 
-        // Estado y UI según tipo de cobro
         mostrarEstadoCobro(calculo)
     }
 
     private fun mostrarEstadoCobro(calculo: com.cepa.parqueo.database.CalculoMonto) {
         when (calculo.estadoCobro) {
             "GRACIA_ENTRADA" -> {
-                // Primeros 15 minutos - GRATIS
                 binding.cardEstado.setCardBackgroundColor(
                     ContextCompat.getColor(this, android.R.color.holo_green_light)
                 )
                 binding.tvEstadoTitulo.text = "✓ DENTRO DE PERÍODO DE GRACIA"
                 binding.tvEstadoMensaje.text =
                     "Los primeros 15 minutos son gratuitos.\nNo hay cargo por este vehículo."
-
                 binding.btnProcesarPago.text = "Continuar Sin Cobro"
                 binding.btnProcesarPago.isEnabled = true
-
-                // Cambiar el monto a 0 para registrar gratis
                 montoCalculado = 0.0
             }
 
             "GRACIA_SALIDA" -> {
-                // Ya pagó y está dentro de 15 min de gracia
                 binding.cardEstado.setCardBackgroundColor(
                     ContextCompat.getColor(this, android.R.color.holo_blue_light)
                 )
                 binding.tvEstadoTitulo.text = "✓ YA PAGÓ - TIEMPO DE GRACIA"
                 binding.tvEstadoMensaje.text =
                     "El vehículo ya realizó el pago.\nTiene 15 minutos para salir sin cargo adicional."
-
                 binding.btnProcesarPago.text = "Continuar Sin Cobro"
                 binding.btnProcesarPago.isEnabled = true
-
-                // Ya pagó, no cobrar adicional
                 montoCalculado = 0.0
             }
 
             "DEBE_PAGAR" -> {
-                // Debe pagar
                 binding.cardEstado.setCardBackgroundColor(
                     ContextCompat.getColor(this, android.R.color.holo_orange_dark)
                 )
@@ -237,36 +225,28 @@ class PagoVehiculoActivity : AppCompatActivity() {
             }
 
             else -> {
-                // GRATIS o cualquier otro caso
                 binding.cardEstado.setCardBackgroundColor(
                     ContextCompat.getColor(this, android.R.color.holo_green_dark)
                 )
                 binding.tvEstadoTitulo.text = "✓ SIN CARGO"
                 binding.tvEstadoMensaje.text = "No hay cargo para este vehículo."
-
                 binding.btnProcesarPago.text = "Continuar Sin Cobro"
                 binding.btnProcesarPago.isEnabled = true
-
-                // Sin cargo
                 montoCalculado = 0.0
             }
         }
     }
 
     private fun procesarPago() {
-        // Si no hay monto a cobrar (gracia o gratis), registrar pago de $0.00
+        // ⭐ Si es periodo de gracia, NO pedir método de pago, solo continuar
         if (montoCalculado <= 0) {
             ejecutarRegistroPagoGratis()
             return
         }
-
-        // MOSTRAR SELECTOR DE MÉTODO DE PAGO
+        // ⭐ Solo mostrar selector de método cuando HAY monto a cobrar
         mostrarSelectorMetodoPago()
     }
 
-    /**
-     * Muestra diálogo para seleccionar método de pago
-     */
     private fun mostrarSelectorMetodoPago() {
         val opciones = arrayOf(
             "💵 Efectivo (Cash)",
@@ -275,23 +255,18 @@ class PagoVehiculoActivity : AppCompatActivity() {
 
         AlertDialog.Builder(this)
             .setTitle("Seleccionar Método de Pago")
-            .setItems(opciones) { dialog, which ->
+            .setItems(opciones) { _, which ->
                 operationType = when (which) {
-                    0 -> 1  // Efectivo
-                    1 -> 2  // Tarjeta
+                    0 -> 1
+                    1 -> 2
                     else -> 1
                 }
-
-                // Mostrar confirmación con el método seleccionado
                 mostrarConfirmacionPago()
             }
             .setNegativeButton("Cancelar", null)
             .show()
     }
 
-    /**
-     * Confirmación de pago con método seleccionado
-     */
     private fun mostrarConfirmacionPago() {
         val metodoTexto = when (operationType) {
             1 -> "💵 Efectivo"
@@ -321,7 +296,7 @@ class PagoVehiculoActivity : AppCompatActivity() {
     }
 
     /**
-     * Registra pago de $0.00 para casos de gracia/gratis
+     * Registra sin cobro (periodo de gracia) - NO imprime ticket
      */
     private fun ejecutarRegistroPagoGratis() {
         binding.btnProcesarPago.isEnabled = false
@@ -337,7 +312,7 @@ class PagoVehiculoActivity : AppCompatActivity() {
                 monto = 0.00,
                 idPayDevice = idNumerico,
                 strRateKey = strRateKey,
-                operationType = 1  // Gratis siempre es efectivo
+                operationType = 1
             )
 
             binding.progressBar.visibility = View.GONE
@@ -350,7 +325,8 @@ class PagoVehiculoActivity : AppCompatActivity() {
                         Toast.LENGTH_SHORT
                     ).show()
 
-                    // ⭐ CAJA: Solo terminar, NO ir a confirmación
+                    // ⭐ NO IMPRIMIR TICKET - Es periodo de gracia
+
                     if (esUsuarioCaja) {
                         finalizarParaCaja()
                     } else {
@@ -371,22 +347,24 @@ class PagoVehiculoActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Registra pago real (efectivo o tarjeta) - SÍ imprime ticket
+     */
     private fun ejecutarRegistroPago() {
         binding.btnProcesarPago.isEnabled = false
         binding.btnCancelar.isEnabled = false
         binding.progressBar.visibility = View.VISIBLE
 
         lifecycleScope.launch {
-            // Obtener IdPayDevice desde configuración del dispositivo
             val sharedPref = getSharedPreferences("DeviceConfig", MODE_PRIVATE)
-            val idNumerico = sharedPref.getInt("id_numerico", 3) // Default 3 para app móvil
+            val idNumerico = sharedPref.getInt("id_numerico", 3)
 
             val result = vehiculoRepository.registrarPagoDesdeApp(
                 placa = vehiculo.placa,
                 monto = montoCalculado,
                 idPayDevice = idNumerico,
                 strRateKey = strRateKey,
-                operationType = operationType  // Usar método seleccionado
+                operationType = operationType
             )
 
             binding.progressBar.visibility = View.GONE
@@ -409,7 +387,9 @@ class PagoVehiculoActivity : AppCompatActivity() {
 
                     Log.d(TAG, "Pago registrado - ID: ${result.idVehiculo}, Monto: ${result.montoRegistrado}, Tipo: $operationType")
 
-                    // ⭐ CAJA: Solo terminar, NO ir a confirmación
+                    // ⭐ IMPRIMIR TICKET - Solo cuando hay pago real
+                    imprimirTicketPago(result.montoRegistrado, metodoTexto)
+
                     if (esUsuarioCaja) {
                         finalizarParaCaja()
                     } else {
@@ -431,8 +411,37 @@ class PagoVehiculoActivity : AppCompatActivity() {
     }
 
     /**
-     * ⭐ NUEVO: Finalizar para usuario CAJA (NO va a confirmación de salida)
+     * Imprimir ticket de pago - Solo para pagos reales (efectivo/tarjeta)
      */
+    private fun imprimirTicketPago(monto: Double, metodoPago: String) {
+        try {
+            val ticketData = PagoTicketData(
+                placa = vehiculo.placa,
+                fechaEntrada = vehiculo.fechaEntrada,
+                fechaPago = Date(),
+                tiempoTotalMinutos = tiempoTotalMinutos,
+                tiempoCobrableMinutos = tiempoCobrableMinutos,
+                monto = monto,
+                metodoPago = metodoPago,
+                operador = nombreOperador,
+                idDispositivo = idDispositivo,
+                estadoCobro = estadoCobro
+            )
+
+            PagoTicketPrinter.printPagoTicket(this, ticketData)
+
+            Log.d(TAG, "✓ Ticket de pago enviado a impresión")
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error al imprimir ticket de pago", e)
+            Toast.makeText(
+                this,
+                "⚠ Error al imprimir ticket: ${e.message}",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
     private fun finalizarParaCaja() {
         Toast.makeText(
             this,
@@ -447,14 +456,13 @@ class PagoVehiculoActivity : AppCompatActivity() {
     private fun irAConfirmacionSalida() {
         val intent = Intent(this, SalidaConfirmacionActivity::class.java)
 
-        // Actualizar datos del vehículo con el pago
         intent.putExtra("VEHICULO_ID", vehiculo.id)
         intent.putExtra("VEHICULO_PLACA", vehiculo.placa)
         intent.putExtra("VEHICULO_FECHA", vehiculo.fechaEntrada.time)
         intent.putExtra("VEHICULO_CODIGO", vehiculo.codigoBarras)
-        intent.putExtra("BIT_PAID", 1) // Ahora sí está pagado
+        intent.putExtra("BIT_PAID", 1)
         intent.putExtra("MONTO", montoCalculado)
-        intent.putExtra("FECHA_PAGO", System.currentTimeMillis()) // Pago recién hecho
+        intent.putExtra("FECHA_PAGO", System.currentTimeMillis())
         intent.putExtra("TIEMPO_MINUTOS", tiempoCobrableMinutos)
 
         startActivityForResult(intent, REQUEST_CODE_CONFIRMACION)
@@ -464,7 +472,6 @@ class PagoVehiculoActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
 
         if (requestCode == REQUEST_CODE_CONFIRMACION) {
-            // Cerrar esta activity y volver a la lista
             setResult(RESULT_OK)
             finish()
         }
