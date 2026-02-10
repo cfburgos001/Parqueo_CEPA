@@ -99,6 +99,7 @@
                 android:visibility="gone"
                 android:layout_marginTop="16dp"/>
 
+
             <!-- Texto informativo para el botón de cortesía -->
             <TextView
                 android:id="@+id/tvInfoSinCobro"
@@ -110,6 +111,19 @@
                 android:textColor="#757575"
                 android:visibility="gone"
                 android:layout_marginTop="8dp"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAperturaManualSalida"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="12dp"
+                android:text="🔓 APERTURA MANUAL DE BARRERA"
+                android:textSize="14sp"
+                android:textColor="@android:color/white"
+                app:backgroundTint="#FF6F00"
+                app:cornerRadius="8dp" />
 
         </LinearLayout>
     </ScrollView>

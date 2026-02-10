@@ -238,12 +238,12 @@ class PagoVehiculoActivity : AppCompatActivity() {
     }
 
     private fun procesarPago() {
-        // ⭐ Si es periodo de gracia, NO pedir método de pago, solo continuar
+        //  Si es periodo de gracia, NO pedir método de pago, solo continuar
         if (montoCalculado <= 0) {
             ejecutarRegistroPagoGratis()
             return
         }
-        // ⭐ Solo mostrar selector de método cuando HAY monto a cobrar
+        //  Solo mostrar selector de método cuando HAY monto a cobrar
         mostrarSelectorMetodoPago()
     }
 
@@ -325,7 +325,7 @@ class PagoVehiculoActivity : AppCompatActivity() {
                         Toast.LENGTH_SHORT
                     ).show()
 
-                    // ⭐ NO IMPRIMIR TICKET - Es periodo de gracia
+                    //  NO IMPRIMIR TICKET - Es periodo de gracia
 
                     if (esUsuarioCaja) {
                         finalizarParaCaja()
@@ -387,7 +387,7 @@ class PagoVehiculoActivity : AppCompatActivity() {
 
                     Log.d(TAG, "Pago registrado - ID: ${result.idVehiculo}, Monto: ${result.montoRegistrado}, Tipo: $operationType")
 
-                    // ⭐ IMPRIMIR TICKET - Solo cuando hay pago real
+                    //  IMPRIMIR TICKET - Solo cuando hay pago real
                     imprimirTicketPago(result.montoRegistrado, metodoTexto)
 
                     if (esUsuarioCaja) {

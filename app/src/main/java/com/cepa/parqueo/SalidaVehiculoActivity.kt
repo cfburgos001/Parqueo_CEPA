@@ -33,6 +33,8 @@ class SalidaVehiculoActivity : AppCompatActivity() {
     private var idOperador: Int = 0
     private var vehiculoActual: VehiculoDB? = null
 
+    private var nombreOperador: String = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySalidaVehiculoBinding.inflate(layoutInflater)
@@ -58,6 +60,13 @@ class SalidaVehiculoActivity : AppCompatActivity() {
         val sharedPref = getSharedPreferences("ParkingSession", MODE_PRIVATE)
         tipoUsuario = sharedPref.getString("userType", "") ?: ""
         idOperador = sharedPref.getInt("id_operador", 0)
+        nombreOperador = sharedPref.getString("nombre_operador", "") ?: ""
+        // Si no existe, concatenar desde nombre + apellido
+        if (nombreOperador.isEmpty()) {
+            val nombre = sharedPref.getString("nombre", "") ?: ""
+            val apellido = sharedPref.getString("apellido", "") ?: ""
+            nombreOperador = "$nombre $apellido".trim()
+        }
 
         android.util.Log.d("SalidaVehiculo", "Tipo de usuario: $tipoUsuario, ID: $idOperador")
     }
@@ -158,6 +167,16 @@ class SalidaVehiculoActivity : AppCompatActivity() {
 
         binding.etPlaca.addTextChangedListener {
             binding.tilPlaca.error = null
+        }
+        // ⭐ NUEVO: Botón de Apertura Manual de Barrera (SALIDA)
+        binding.btnAperturaManualSalida.setOnClickListener {
+            AperturaManualDialog.mostrar(
+                activity = this,
+                lifecycleScope = lifecycleScope,
+                contexto = "SALIDA",
+                idOperador = idOperador,
+                nombreOperador = nombreOperador
+            )
         }
     }
 

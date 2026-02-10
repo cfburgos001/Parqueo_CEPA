@@ -112,6 +112,11 @@ class MantenimientoActivity : AppCompatActivity() {
         binding.btnRestaurar.setOnClickListener {
             mostrarDialogoRestaurar()
         }
+        // ⭐ NUEVO: Botón para configurar logs de apertura manual
+        binding.btnConfigLogsApertura.setOnClickListener {
+            val intent = Intent(this, ConfigurarLogsAperturaActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     /**

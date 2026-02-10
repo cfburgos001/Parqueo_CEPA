@@ -68,6 +68,20 @@
                         android:text="Gestionar Usuarios"
                         app:icon="@android:drawable/ic_menu_manage"
                         app:cornerRadius="8dp"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnConfigLogsApertura"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:layout_marginTop="12dp"
+                        android:text="⚙ Configurar Logs de Apertura Manual"
+                        android:textSize="14sp"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        app:strokeColor="#1565C0"
+                        app:cornerRadius="8dp" />
+
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

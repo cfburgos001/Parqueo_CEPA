@@ -234,6 +234,17 @@ class IngresoVehiculoActivity : AppCompatActivity() {
         }
 
         binding.btnReimprimir.isEnabled = false
+
+        // ⭐ NUEVO: Botón de Apertura Manual de Barrera (ENTRADA)
+        binding.btnAperturaManualEntrada.setOnClickListener {
+            AperturaManualDialog.mostrar(
+                activity = this,
+                lifecycleScope = lifecycleScope,
+                contexto = "ENTRADA",
+                idOperador = idOperador,
+                nombreOperador = nombreOperador
+            )
+        }
     }
 
     private fun registrarEntrada() {
