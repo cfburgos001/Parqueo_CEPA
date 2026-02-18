@@ -164,9 +164,9 @@ class IngresoVehiculoActivity : AppCompatActivity() {
 
     private fun configurarTarifasPorDefecto() {
         val opcionesDefault = listOf(
-            "Vehículo Normal - $1.25/h",
+            "Vehiculo Normal - $1.25/h",
             "Motocicleta - $1.00/h",
-            "Camión - $2.00/h"
+            "Camion - $2.00/h"
         )
 
         val adapter = ArrayAdapter(
@@ -251,7 +251,7 @@ class IngresoVehiculoActivity : AppCompatActivity() {
         val placa = binding.etPlaca.text.toString().trim()
 
         if (placa.isEmpty()) {
-            binding.tilPlaca.error = "Ingrese la placa del vehículo"
+            binding.tilPlaca.error = "Ingrese la placa del vehiculo"
             return
         }
 
@@ -275,8 +275,8 @@ class IngresoVehiculoActivity : AppCompatActivity() {
                 is RegistroEntradaResult.Success -> {
                     val tipoVehiculoTexto = when (strRateKeySeleccionado) {
                         "M" -> "Moto"
-                        "C" -> "Camión"
-                        else -> "Vehículo"
+                        "C" -> "Camion"
+                        else -> "Vehiculo"
                     }
 
                     Toast.makeText(

@@ -88,11 +88,9 @@ object PrinterManager {
         out.write("TICKET DE INGRESO\n".utf8())
         out.write(byteArrayOf(0x1B, 0x45, 0x00))
         out.write("============================\n".utf8())
-        out.write("\n".utf8())
 
         // CODE128 - ESCANEABLE (imprime solo la PLACA para mejor lectura)
         printBarcode128(out, data.plate)
-        out.write("\n".utf8())
 
         // Información principal
         out.write(byteArrayOf(0x1B, 0x61, 0x00)) // Izquierda
@@ -114,8 +112,16 @@ object PrinterManager {
         out.write("\n".utf8())
         out.write("FECHA: ${dateFormatter.format(data.entryTime)}\n".utf8())
         out.write("HORA:  ${timeFormatter.format(data.entryTime)}\n".utf8())
+
+        // Solo un salto antes del ID
         out.write("\n".utf8())
         out.write("ID: ${data.uniqueId}\n".utf8())
+
+        // Separación adicional antes del segundo código de barras
+        out.write("\n".utf8())
+
+        // Barcode después del ID
+        printBarcode128(out, data.plate)
 
         // Footer
         out.write(byteArrayOf(0x1B, 0x61, 0x01)) // Centrar
@@ -126,7 +132,7 @@ object PrinterManager {
         out.write(byteArrayOf(0x1B, 0x45, 0x00))
         out.write("============================\n".utf8())
 
-        out.write("\n\n\n".utf8())
+        out.write("\n\n".utf8()) // Solo dos saltos antes del corte
 
         // Corte
         out.write(byteArrayOf(0x1D, 0x56, 0x01))
@@ -143,11 +149,11 @@ object PrinterManager {
             // GS H - Posición del texto HRI (abajo)
             out.write(byteArrayOf(0x1D, 0x48, 0x02))
 
-            // GS h - Altura del código de barras (100 puntos)
-            out.write(byteArrayOf(0x1D, 0x68, 0x96.toByte()))
+            // GS h - Altura del código de barras (80 puntos)
+            out.write(byteArrayOf(0x1D, 0x68, 0x50.toByte()))
 
-            // GS w - Ancho del código de barras (3 = mediano)
-            out.write(byteArrayOf(0x1D, 0x77, 0x03))
+            // GS w - Ancho del código de barras (2 = delgado)
+            out.write(byteArrayOf(0x1D, 0x77, 0x02))
 
             // GS k - Imprimir código de barras CODE128
             // Formato: GS k 73 n [datos]
@@ -179,7 +185,7 @@ object PrinterManager {
             appendLine()
             appendLine("[CODE128: ${data.plate}]")
             appendLine()
-            appendLine("TIPO: ${data.vehicleType}")  // 
+            appendLine("TIPO: ${data.vehicleType}")
             appendLine()
             appendLine("PLACA: ${data.plate}")
             appendLine()
