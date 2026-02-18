@@ -12,10 +12,6 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.UUID
 
-/**
- * PrinterManager V2
- * Actualizado para imprimir el tipo de vehículo en el ticket
- */
 @SuppressLint("MissingPermission")
 object PrinterManager {
 
@@ -66,7 +62,7 @@ object PrinterManager {
             outputStream.flush()
             socket.close()
 
-            Toast.makeText(context, "✓ Ticket impreso", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Ticket impreso", Toast.LENGTH_SHORT).show()
 
         } catch (e: Exception) {
             e.printStackTrace()
@@ -74,54 +70,41 @@ object PrinterManager {
         }
     }
 
-    /**
-     *  Imprime ticket con tipo de vehículo
-     */
     private fun sendEscPosPrint(out: OutputStream, data: ReceiptData) {
-        // Inicializar
-        out.write(byteArrayOf(0x1B, 0x40))
+        out.write(byteArrayOf(0x1B, 0x40)) // Inicializar
 
         // Encabezado
         out.write(byteArrayOf(0x1B, 0x61, 0x01)) // Centrar
-        out.write(byteArrayOf(0x1B, 0x45, 0x01)) // Negrita
+        out.write(byteArrayOf(0x1B, 0x45, 0x01)) // Negrita on
         out.write("CENTRO PANAMERICANO DE OJOS\n".utf8())
         out.write("TICKET DE INGRESO\n".utf8())
-        out.write(byteArrayOf(0x1B, 0x45, 0x00))
+        out.write(byteArrayOf(0x1B, 0x45, 0x00)) // Negrita off
         out.write("============================\n".utf8())
 
-        // CODE128 - ESCANEABLE (imprime solo la PLACA para mejor lectura)
-        printBarcode128(out, data.plate)
+        // QR Code con la placa
+        printQRCode(out, data.plate)
 
-        // Información principal
+        // Datos del vehiculo
         out.write(byteArrayOf(0x1B, 0x61, 0x00)) // Izquierda
 
         val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         val timeFormatter = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
 
-        //  Tipo de Vehículo
-        out.write(byteArrayOf(0x1B, 0x45, 0x01)) // Negrita
+        out.write(byteArrayOf(0x1B, 0x45, 0x01))
         out.write("TIPO: ${data.vehicleType}\n".utf8())
         out.write(byteArrayOf(0x1B, 0x45, 0x00))
         out.write("\n".utf8())
 
-        // Placa
-        out.write(byteArrayOf(0x1B, 0x45, 0x01)) // Negrita
+        out.write(byteArrayOf(0x1B, 0x45, 0x01))
         out.write("PLACA: ${data.plate}\n".utf8())
         out.write(byteArrayOf(0x1B, 0x45, 0x00))
 
         out.write("\n".utf8())
         out.write("FECHA: ${dateFormatter.format(data.entryTime)}\n".utf8())
         out.write("HORA:  ${timeFormatter.format(data.entryTime)}\n".utf8())
-
-        // Solo un salto antes del ID
         out.write("\n".utf8())
         out.write("ID: ${data.uniqueId}\n".utf8())
-
-        // Separación adicional antes del segundo código de barras
         out.write("\n".utf8())
-
-        // Barcode después del ID
-        printBarcode128(out, data.plate)
 
         // Footer
         out.write(byteArrayOf(0x1B, 0x61, 0x01)) // Centrar
@@ -131,66 +114,71 @@ object PrinterManager {
         out.write("PARA SU SALIDA\n".utf8())
         out.write(byteArrayOf(0x1B, 0x45, 0x00))
         out.write("============================\n".utf8())
+        out.write("\n\n".utf8())
 
-        out.write("\n\n".utf8()) // Solo dos saltos antes del corte
-
-        // Corte
-        out.write(byteArrayOf(0x1D, 0x56, 0x01))
+        out.write(byteArrayOf(0x1D, 0x56, 0x01)) // Corte
     }
 
     /**
-     * Imprime CODE128 usando comandos ESC/POS
+     * Genera el QR con ZXing y lo envia como imagen raster (GS v 0).
+     * Compatible con impresoras que no soportan comandos QR nativos.
+     *
+     * Para ajustar el tamano del QR, modifica targetPixels:
+     *   200 = pequeno | 300 = mediano | 400 = grande
+     *
+     * Requiere en build.gradle:
+     *   implementation 'com.google.zxing:core:3.5.2'
      */
-    private fun printBarcode128(out: OutputStream, data: String) {
+    private fun printQRCode(out: OutputStream, data: String) {
         try {
-            // Centrar código de barras
-            out.write(byteArrayOf(0x1B, 0x61, 0x01))
+            val hints = mapOf(
+                com.google.zxing.EncodeHintType.ERROR_CORRECTION to com.google.zxing.qrcode.decoder.ErrorCorrectionLevel.M,
+                com.google.zxing.EncodeHintType.MARGIN to 1
+            )
+            val bitMatrix = com.google.zxing.qrcode.QRCodeWriter()
+                .encode(data, com.google.zxing.BarcodeFormat.QR_CODE, 0, 0, hints)
 
-            // GS H - Posición del texto HRI (abajo)
-            out.write(byteArrayOf(0x1D, 0x48, 0x02))
+            val targetPixels = 200
+            val scale = maxOf(1, targetPixels / bitMatrix.width)
+            val imgWidth  = bitMatrix.width  * scale
+            val imgHeight = bitMatrix.height * scale
+            val bytesPerRow = (imgWidth + 7) / 8
 
-            // GS h - Altura del código de barras (80 puntos)
-            out.write(byteArrayOf(0x1D, 0x68, 0x50.toByte()))
+            val imgData = ByteArray(bytesPerRow * imgHeight)
+            for (y in 0 until imgHeight) {
+                for (x in 0 until imgWidth) {
+                    if (bitMatrix.get(x / scale, y / scale)) {
+                        val byteIndex = y * bytesPerRow + (x / 8)
+                        imgData[byteIndex] = (imgData[byteIndex].toInt() or (1 shl (7 - x % 8))).toByte()
+                    }
+                }
+            }
 
-            // GS w - Ancho del código de barras (2 = delgado)
-            out.write(byteArrayOf(0x1D, 0x77, 0x02))
-
-            // GS k - Imprimir código de barras CODE128
-            // Formato: GS k 73 n [datos]
-            out.write(0x1D) // GS
-            out.write(0x6B) // k
-            out.write(0x49) // CODE128 (73 = 0x49)
-            out.write(data.length) // Longitud
-            out.write(data.utf8()) // Datos
-
+            out.write(byteArrayOf(0x1B, 0x61, 0x01)) // Centrar
+            out.write(byteArrayOf(
+                0x1D, 0x76, 0x30, 0x00,
+                (bytesPerRow and 0xFF).toByte(), (bytesPerRow shr 8).toByte(),
+                (imgHeight and 0xFF).toByte(),   (imgHeight shr 8).toByte()
+            ))
+            out.write(imgData)
             out.write("\n".utf8())
-
-            // Volver a alinear izquierda
-            out.write(byteArrayOf(0x1B, 0x61, 0x00))
+            out.write(byteArrayOf(0x1B, 0x61, 0x00)) // Izquierda
 
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
-    /**
-     *  Incluye tipo de vehículo en texto de fallback
-     */
     private fun buildReceiptText(data: ReceiptData): String {
         val dateFormatter = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
         return buildString {
-            appendLine("CEPA")
-            appendLine("TICKET DE INGRESO")
+            appendLine("CEPA - TICKET DE INGRESO")
             appendLine("========================")
-            appendLine()
-            appendLine("[CODE128: ${data.plate}]")
+            appendLine("[QR: ${data.plate}]")
             appendLine()
             appendLine("TIPO: ${data.vehicleType}")
-            appendLine()
             appendLine("PLACA: ${data.plate}")
-            appendLine()
             appendLine(dateFormatter.format(data.entryTime))
-            appendLine()
             appendLine("ID: ${data.uniqueId}")
             appendLine("========================")
             appendLine("VALIDAR ESTE TICKET")
