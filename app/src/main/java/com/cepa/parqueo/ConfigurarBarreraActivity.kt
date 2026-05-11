@@ -12,8 +12,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.cepa.parqueo.database.AperturaManualRepository
-import com.cepa.parqueo.database.AperturaManualRepository.BarreraItem
-import com.cepa.parqueo.database.AperturaManualRepository.BarrerasResult
+import com.cepa.parqueo.database.BarreraItem
+import com.cepa.parqueo.database.BarrerasResult
 import com.cepa.parqueo.database.DispositivoManager
 import com.cepa.parqueo.databinding.ActivityConfigurarBarreraBinding
 import kotlinx.coroutines.launch
