@@ -6,11 +6,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.sql.Connection
 
-/**
- * Repositorio para operaciones de Apertura Manual de Barrera
- * Usa tabla separada IOT_ConfigAperturaManual (no toca IOT_TiposLogs)
- * Configuración GLOBAL desde la BD
- */
 class AperturaManualRepository(private val context: Context) {
 
     private val dbHelper = DatabaseHelper(context)
@@ -20,19 +15,12 @@ class AperturaManualRepository(private val context: Context) {
     // PARA LA APP (botones de entrada/salida)
     // =============================================
 
-    /**
-     * Obtiene los tipos de log configurados para un contexto
-     * Solo retorna los que el admin habilitó en Mantenimiento
-     */
     suspend fun obtenerLogsParaApertura(contexto: String): TiposLogAperturaResult {
         return withContext(Dispatchers.IO) {
             var connection: Connection? = null
             try {
                 connection = dbHelper.getConnection()
-
-                if (connection == null) {
-                    return@withContext TiposLogAperturaResult.Error("No se pudo conectar a la base de datos")
-                }
+                    ?: return@withContext TiposLogAperturaResult.Error("No se pudo conectar a la base de datos")
 
                 val sql = "{CALL dbo.IOT_sp_ObtenerLogsParaApertura(?)}"
                 val callableStatement = connection.prepareCall(sql)
@@ -54,7 +42,7 @@ class AperturaManualRepository(private val context: Context) {
                 resultSet.close()
                 callableStatement.close()
 
-                Log.d(TAG, "✓ ${tiposLog.size} logs configurados para $contexto")
+                Log.d(TAG, "${tiposLog.size} logs configurados para $contexto")
                 TiposLogAperturaResult.Success(tiposLog)
 
             } catch (e: Exception) {
@@ -67,49 +55,45 @@ class AperturaManualRepository(private val context: Context) {
     }
 
     /**
-     * Ejecuta la apertura manual:
-     * 1. ComandoBarrera = 1, EstadoBarrera = 1
-     * 2. Registra en IOT_Logs con nombre del operador
+     * Ejecuta la apertura manual sobre la barrera indicada.
+     * @param idBarrera  ID de la fila en IOT_Barrera a abrir (default 1).
      */
     suspend fun ejecutarAperturaManual(
         idTipoLog: Int,
         idOperador: Int,
         nombreOperador: String,
         idDispositivo: String,
-        contexto: String
+        contexto: String,
+        idBarrera: Int = 1
     ): AperturaManualResult {
         return withContext(Dispatchers.IO) {
             var connection: Connection? = null
             try {
                 connection = dbHelper.getConnection()
+                    ?: return@withContext AperturaManualResult.Error("No se pudo conectar a la base de datos")
 
-                if (connection == null) {
-                    return@withContext AperturaManualResult.Error("No se pudo conectar a la base de datos")
-                }
-
-                val sql = "{CALL dbo.IOT_sp_EjecutarAperturaManualConLog(?, ?, ?, ?, ?)}"
+                val sql = "{CALL dbo.IOT_sp_EjecutarAperturaManualConLog(?, ?, ?, ?, ?, ?)}"
                 val callableStatement = connection.prepareCall(sql)
-
                 callableStatement.setInt(1, idTipoLog)
                 callableStatement.setInt(2, idOperador)
                 callableStatement.setString(3, nombreOperador)
                 callableStatement.setString(4, idDispositivo)
                 callableStatement.setString(5, contexto)
+                callableStatement.setInt(6, idBarrera)
 
                 val resultSet = callableStatement.executeQuery()
 
                 if (resultSet.next()) {
                     val exitoso = resultSet.getInt("Exitoso")
                     val mensaje = resultSet.getString("Mensaje")
-
                     resultSet.close()
                     callableStatement.close()
 
                     if (exitoso == 1) {
-                        Log.d(TAG, "✓ Apertura manual exitosa: $mensaje")
+                        Log.d(TAG, "Apertura manual exitosa (barrera $idBarrera): $mensaje")
                         AperturaManualResult.Success(mensaje)
                     } else {
-                        Log.w(TAG, "✗ Apertura manual fallida: $mensaje")
+                        Log.w(TAG, "Apertura manual fallida: $mensaje")
                         AperturaManualResult.Error(mensaje)
                     }
                 } else {
@@ -128,28 +112,63 @@ class AperturaManualRepository(private val context: Context) {
     }
 
     // =============================================
-    // PARA MANTENIMIENTO (configuración)
+    // BARRERAS
     // =============================================
 
-    /**
-     * Lista TODOS los tipos de log activos con sus flags de asignación
-     */
+    /** Lista todas las filas de IOT_Barrera para mostrarlas en Configurar Barrera */
+    suspend fun listarBarreras(): BarrerasResult {
+        return withContext(Dispatchers.IO) {
+            var connection: Connection? = null
+            try {
+                connection = dbHelper.getConnection()
+                    ?: return@withContext BarrerasResult.Error("No se pudo conectar a la base de datos")
+
+                val sql = "{CALL dbo.IOT_sp_ListarBarreras}"
+                val callableStatement = connection.prepareCall(sql)
+                val resultSet = callableStatement.executeQuery()
+
+                val barreras = mutableListOf<BarreraItem>()
+                while (resultSet.next()) {
+                    barreras.add(
+                        BarreraItem(
+                            id = resultSet.getInt("ID"),
+                            barreraSeteo = resultSet.getString("BarreraSeteo") ?: "",
+                            estadoBarrera = resultSet.getBoolean("EstadoBarrera")
+                        )
+                    )
+                }
+
+                resultSet.close()
+                callableStatement.close()
+
+                Log.d(TAG, "${barreras.size} barreras listadas")
+                BarrerasResult.Success(barreras)
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error al listar barreras", e)
+                BarrerasResult.Error("Error: ${e.message}")
+            } finally {
+                dbHelper.closeConnection(connection)
+            }
+        }
+    }
+
+    // =============================================
+    // PARA MANTENIMIENTO (configuracion de logs)
+    // =============================================
+
     suspend fun listarTodosLosTiposLog(): TiposLogMantenimientoResult {
         return withContext(Dispatchers.IO) {
             var connection: Connection? = null
             try {
                 connection = dbHelper.getConnection()
-
-                if (connection == null) {
-                    return@withContext TiposLogMantenimientoResult.Error("No se pudo conectar a la base de datos")
-                }
+                    ?: return@withContext TiposLogMantenimientoResult.Error("No se pudo conectar a la base de datos")
 
                 val sql = "{CALL dbo.IOT_sp_ListarTodosLosTiposLog}"
                 val callableStatement = connection.prepareCall(sql)
                 val resultSet = callableStatement.executeQuery()
 
                 val tiposLog = mutableListOf<TipoLogMantenimiento>()
-
                 while (resultSet.next()) {
                     tiposLog.add(
                         TipoLogMantenimiento(
@@ -165,7 +184,7 @@ class AperturaManualRepository(private val context: Context) {
                 resultSet.close()
                 callableStatement.close()
 
-                Log.d(TAG, "✓ ${tiposLog.size} tipos de log listados")
+                Log.d(TAG, "${tiposLog.size} tipos de log listados")
                 TiposLogMantenimientoResult.Success(tiposLog)
 
             } catch (e: Exception) {
@@ -177,51 +196,29 @@ class AperturaManualRepository(private val context: Context) {
         }
     }
 
-    /**
-     * Agrega un tipo de log a un contexto (ENTRADA/SALIDA)
-     */
-    suspend fun agregarLogAContexto(
-        idTipoLog: Int,
-        contexto: String,
-        usuarioCreacion: String? = null
-    ): DatabaseResult {
+    suspend fun agregarLogAContexto(idTipoLog: Int, contexto: String, usuarioCreacion: String? = null): DatabaseResult {
         return withContext(Dispatchers.IO) {
             var connection: Connection? = null
             try {
                 connection = dbHelper.getConnection()
-
-                if (connection == null) {
-                    return@withContext DatabaseResult.Error("No se pudo conectar a la base de datos")
-                }
+                    ?: return@withContext DatabaseResult.Error("No se pudo conectar a la base de datos")
 
                 val sql = "{CALL dbo.IOT_sp_AgregarLogAContexto(?, ?, ?)}"
-                val callableStatement = connection.prepareCall(sql)
+                val cs = connection.prepareCall(sql)
+                cs.setInt(1, idTipoLog)
+                cs.setString(2, contexto)
+                cs.setString(3, usuarioCreacion)
 
-                callableStatement.setInt(1, idTipoLog)
-                callableStatement.setString(2, contexto)
-                callableStatement.setString(3, usuarioCreacion)
-
-                val resultSet = callableStatement.executeQuery()
-
-                if (resultSet.next()) {
-                    val exitoso = resultSet.getInt("Exitoso")
-                    val mensaje = resultSet.getString("Mensaje")
-
-                    resultSet.close()
-                    callableStatement.close()
-
-                    if (exitoso == 1) {
-                        Log.d(TAG, "✓ Log agregado: $mensaje")
-                        DatabaseResult.Success(mensaje)
-                    } else {
-                        DatabaseResult.Error(mensaje)
-                    }
+                val rs = cs.executeQuery()
+                if (rs.next()) {
+                    val exitoso = rs.getInt("Exitoso")
+                    val mensaje = rs.getString("Mensaje")
+                    rs.close(); cs.close()
+                    if (exitoso == 1) DatabaseResult.Success(mensaje) else DatabaseResult.Error(mensaje)
                 } else {
-                    resultSet.close()
-                    callableStatement.close()
+                    rs.close(); cs.close()
                     DatabaseResult.Error("No se obtuvo respuesta")
                 }
-
             } catch (e: Exception) {
                 Log.e(TAG, "Error al agregar log a contexto", e)
                 DatabaseResult.Error("Error: ${e.message}")
@@ -231,49 +228,28 @@ class AperturaManualRepository(private val context: Context) {
         }
     }
 
-    /**
-     * Quita un tipo de log de un contexto (ENTRADA/SALIDA)
-     */
-    suspend fun quitarLogDeContexto(
-        idTipoLog: Int,
-        contexto: String
-    ): DatabaseResult {
+    suspend fun quitarLogDeContexto(idTipoLog: Int, contexto: String): DatabaseResult {
         return withContext(Dispatchers.IO) {
             var connection: Connection? = null
             try {
                 connection = dbHelper.getConnection()
-
-                if (connection == null) {
-                    return@withContext DatabaseResult.Error("No se pudo conectar a la base de datos")
-                }
+                    ?: return@withContext DatabaseResult.Error("No se pudo conectar a la base de datos")
 
                 val sql = "{CALL dbo.IOT_sp_QuitarLogDeContexto(?, ?)}"
-                val callableStatement = connection.prepareCall(sql)
+                val cs = connection.prepareCall(sql)
+                cs.setInt(1, idTipoLog)
+                cs.setString(2, contexto)
 
-                callableStatement.setInt(1, idTipoLog)
-                callableStatement.setString(2, contexto)
-
-                val resultSet = callableStatement.executeQuery()
-
-                if (resultSet.next()) {
-                    val exitoso = resultSet.getInt("Exitoso")
-                    val mensaje = resultSet.getString("Mensaje")
-
-                    resultSet.close()
-                    callableStatement.close()
-
-                    if (exitoso == 1) {
-                        Log.d(TAG, "✓ Log removido: $mensaje")
-                        DatabaseResult.Success(mensaje)
-                    } else {
-                        DatabaseResult.Error(mensaje)
-                    }
+                val rs = cs.executeQuery()
+                if (rs.next()) {
+                    val exitoso = rs.getInt("Exitoso")
+                    val mensaje = rs.getString("Mensaje")
+                    rs.close(); cs.close()
+                    if (exitoso == 1) DatabaseResult.Success(mensaje) else DatabaseResult.Error(mensaje)
                 } else {
-                    resultSet.close()
-                    callableStatement.close()
+                    rs.close(); cs.close()
                     DatabaseResult.Error("No se obtuvo respuesta")
                 }
-
             } catch (e: Exception) {
                 Log.e(TAG, "Error al quitar log de contexto", e)
                 DatabaseResult.Error("Error: ${e.message}")
@@ -286,20 +262,20 @@ class AperturaManualRepository(private val context: Context) {
 
 // ===== DATA CLASSES =====
 
-/** Tipo de log para mostrar en el diálogo de apertura manual */
-data class TipoLogApertura(
-    val id: Int,
-    val nombre: String,
-    val descripcion: String
-)
+data class TipoLogApertura(val id: Int, val nombre: String, val descripcion: String)
 
-/** Tipo de log para la pantalla de mantenimiento (con flags de asignación) */
 data class TipoLogMantenimiento(
     val id: Int,
     val nombre: String,
     val descripcion: String,
     val asignadoEntrada: Boolean,
     val asignadoSalida: Boolean
+)
+
+data class BarreraItem(
+    val id: Int,
+    val barreraSeteo: String,
+    val estadoBarrera: Boolean
 )
 
 // ===== SEALED CLASSES =====
@@ -317,4 +293,9 @@ sealed class AperturaManualResult {
 sealed class TiposLogMantenimientoResult {
     data class Success(val tiposLog: List<TipoLogMantenimiento>) : TiposLogMantenimientoResult()
     data class Error(val message: String) : TiposLogMantenimientoResult()
+}
+
+sealed class BarrerasResult {
+    data class Success(val barreras: List<BarreraItem>) : BarrerasResult()
+    data class Error(val message: String) : BarrerasResult()
 }
