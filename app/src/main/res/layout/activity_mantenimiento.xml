@@ -102,7 +102,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="&#128679; Barrera Asignada"
+                        android:text="&#128679; Barreras Asignadas"
                         android:textSize="18sp"
                         android:textStyle="bold"
                         android:textColor="#0D47A1"
@@ -111,34 +111,66 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Barrera fisica que controlara este dispositivo"
+                        android:text="Barreras f&#237;sicas que controla este dispositivo"
                         android:textSize="14sp"
                         android:textColor="#757575"
                         android:layout_marginBottom="12dp"/>
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Barrera actual:"
-                        android:textSize="14sp"
-                        android:textColor="#757575"
-                        android:layout_marginBottom="4dp"/>
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="6dp">
 
-                    <TextView
-                        android:id="@+id/tvBarreraAsignada"
-                        android:layout_width="wrap_content"
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="&#128682; Entrada:"
+                            android:textSize="14sp"
+                            android:textColor="#1B5E20"
+                            android:textStyle="bold"
+                            android:layout_marginEnd="8dp"/>
+
+                        <TextView
+                            android:id="@+id/tvBarreraEntrada"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="ID 1"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="#2E7D32"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="ID 1"
-                        android:textSize="20sp"
-                        android:textStyle="bold"
-                        android:textColor="#2E7D32"
-                        android:layout_marginBottom="16dp"/>
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="&#128683; Salida: "
+                            android:textSize="14sp"
+                            android:textColor="#B71C1C"
+                            android:textStyle="bold"
+                            android:layout_marginEnd="8dp"/>
+
+                        <TextView
+                            android:id="@+id/tvBarreraSalida"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="ID 1"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="#C62828"/>
+                    </LinearLayout>
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnConfigBarrera"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Configurar Barrera"
+                        android:text="Configurar Barreras"
                         android:textColor="#2E7D32"
                         app:icon="@android:drawable/ic_menu_manage"
                         app:cornerRadius="8dp"
@@ -173,7 +205,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Selecciona el tipo de cobro que aplicará a todos los vehículos"
+                        android:text="Selecciona el tipo de cobro que aplicar&#225; a todos los veh&#237;culos"
                         android:textSize="14sp"
                         android:textColor="#757575"
                         android:layout_marginBottom="12dp"/>
@@ -198,7 +230,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Modo Sin Máximo:"
+                            android:text="Modo Sin M&#225;ximo:"
                             android:textSize="16sp"
                             android:textColor="#212121"
                             android:textStyle="bold"/>
@@ -223,7 +255,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Opciones:\n&#8226; APAGADO (Escalonado): Tarifas con tope diario\n&#8226; ENCENDIDO (Sin Máximo): Cobro por hora sin límite"
+                        android:text="Opciones:\n&#8226; APAGADO (Escalonado): Tarifas con tope diario\n&#8226; ENCENDIDO (Sin M&#225;ximo): Cobro por hora sin l&#237;mite"
                         android:textSize="12sp"
                         android:textColor="#757575"
                         android:lineSpacingExtra="4dp"/>
@@ -307,7 +339,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="&#128179; Configuración de Cobros en POS"
+                        android:text="&#128179; Configuraci&#243;n de Cobros en POS"
                         android:textSize="18sp"
                         android:textStyle="bold"
                         android:textColor="#0D47A1"
@@ -316,7 +348,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Habilitar o deshabilitar la función de cobro en este POS"
+                        android:text="Habilitar o deshabilitar la funci&#243;n de cobro en este POS"
                         android:textSize="14sp"
                         android:textColor="#757575"
                         android:layout_marginBottom="12dp"/>
@@ -324,7 +356,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="&#9888;&#65039; Nota: La validación de tiempo de gracia siempre permanecerá activa"
+                        android:text="&#9888;&#65039; Nota: La validaci&#243;n de tiempo de gracia siempre permanecer&#225; activa"
                         android:textSize="12sp"
                         android:textColor="#FF9800"
                         android:textStyle="italic"
@@ -373,7 +405,7 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- SECCIÓN: CONFIGURACIÓN DE TIEMPO DE GRACIA -->
+            <!-- SECCIÓN: TIEMPO DE GRACIA -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -390,7 +422,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="&#9201;&#65039; Configuración de Tiempo de Gracia"
+                        android:text="&#9201;&#65039; Configuraci&#243;n de Tiempo de Gracia"
                         android:textSize="18sp"
                         android:textStyle="bold"
                         android:textColor="#0D47A1"
@@ -399,7 +431,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Tiempo máximo permitido entre el pago y la salida del vehículo"
+                        android:text="Tiempo m&#225;ximo permitido entre el pago y la salida del veh&#237;culo"
                         android:textSize="14sp"
                         android:textColor="#757575"
                         android:layout_marginBottom="12dp"/>
@@ -450,7 +482,7 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- SECCIÓN: CONFIGURACIÓN DE DISPOSITIVO -->
+            <!-- SECCIÓN: DISPOSITIVO -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -467,7 +499,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="&#128241; Configuración de Dispositivo"
+                        android:text="&#128241; Configuraci&#243;n de Dispositivo"
                         android:textSize="18sp"
                         android:textStyle="bold"
                         android:textColor="#0D47A1"
@@ -520,7 +552,7 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- SECCIÓN: CONFIGURACIÓN DEL SERVIDOR -->
+            <!-- SECCIÓN: SERVIDOR -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -537,7 +569,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="&#128421;&#65039; Configuración del Servidor"
+                        android:text="&#128421;&#65039; Configuraci&#243;n del Servidor"
                         android:textSize="18sp"
                         android:textStyle="bold"
                         android:textColor="#0D47A1"
@@ -550,7 +582,6 @@
                         android:hint="IP del Servidor"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         android:layout_marginBottom="12dp">
-
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etServerIp"
                             android:layout_width="match_parent"
@@ -566,7 +597,6 @@
                         android:hint="Puerto"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         android:layout_marginBottom="12dp">
-
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etServerPort"
                             android:layout_width="match_parent"
@@ -582,7 +612,6 @@
                         android:hint="Nombre de la Base de Datos"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         android:layout_marginBottom="12dp">
-
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etDatabaseName"
                             android:layout_width="match_parent"
@@ -598,7 +627,6 @@
                         android:hint="Usuario de la BD"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         android:layout_marginBottom="12dp">
-
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etDbUsername"
                             android:layout_width="match_parent"
@@ -611,11 +639,10 @@
                         android:id="@+id/tilDbPassword"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Contraseña de la BD"
+                        android:hint="Contrase&#241;a de la BD"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         app:endIconMode="password_toggle"
                         android:layout_marginBottom="16dp">
-
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etDbPassword"
                             android:layout_width="match_parent"
@@ -628,7 +655,7 @@
                         android:id="@+id/btnGuardar"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Guardar Configuración"
+                        android:text="Guardar Configuraci&#243;n"
                         android:textSize="14sp"
                         app:cornerRadius="8dp"
                         android:layout_marginBottom="8dp"/>
@@ -637,7 +664,7 @@
                         android:id="@+id/btnProbarConexion"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Probar Conexión"
+                        android:text="Probar Conexi&#243;n"
                         android:textSize="14sp"
                         app:cornerRadius="8dp"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
@@ -653,6 +680,7 @@
                         style="@style/Widget.MaterialComponents.Button.TextButton"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
+
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

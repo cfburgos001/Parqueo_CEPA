@@ -18,17 +18,13 @@ import kotlinx.coroutines.launch
  * Flujo:
  * 1. Consulta IOT_ConfigAperturaManual para el contexto
  * 2. Muestra lista de motivos al operador
- * 3. Al seleccionar: escribe 1 en ComandoBarrera y EstadoBarrera + registra log
+ * 3. Al seleccionar: escribe 1 en ComandoBarrera + EstadoBarrera de la barrera correcta y registra log
  */
 object AperturaManualDialog {
 
     /**
-     * Muestra el diálogo de apertura manual
-     * @param activity La Activity que lo invoca
-     * @param lifecycleScope Scope para coroutines
-     * @param contexto "ENTRADA" o "SALIDA"
-     * @param idOperador ID del operador logueado
-     * @param nombreOperador Nombre completo del operador
+     * Muestra el diálogo de apertura manual.
+     * @param contexto "ENTRADA" o "SALIDA" — determina qué barrera se abre.
      */
     fun mostrar(
         activity: Activity,
@@ -39,6 +35,11 @@ object AperturaManualDialog {
     ) {
         val repository = AperturaManualRepository(activity)
         val dispositivoManager = DispositivoManager(activity)
+
+        val idBarrera = if (contexto == "ENTRADA")
+            dispositivoManager.obtenerIdBarreraEntrada()
+        else
+            dispositivoManager.obtenerIdBarreraSalida()
 
         val progressDialog = AlertDialog.Builder(activity)
             .setTitle("Cargando...")
@@ -67,17 +68,13 @@ object AperturaManualDialog {
 
                     mostrarListaMotivos(
                         activity, lifecycleScope, result.tiposLog,
-                        contexto, idOperador, nombreOperador, idDispositivo
+                        contexto, idOperador, nombreOperador, idDispositivo, idBarrera
                     )
                 }
 
                 is TiposLogAperturaResult.Error -> {
                     progressDialog.dismiss()
-                    Toast.makeText(
-                        activity,
-                        "✗ Error: ${result.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    Toast.makeText(activity, "✗ Error: ${result.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -90,7 +87,8 @@ object AperturaManualDialog {
         contexto: String,
         idOperador: Int,
         nombreOperador: String,
-        idDispositivo: String
+        idDispositivo: String,
+        idBarrera: Int
     ) {
         val descripciones = tiposLog.map { it.descripcion }.toTypedArray()
         val tituloContexto = if (contexto == "ENTRADA") "Entrada" else "Salida"
@@ -98,10 +96,9 @@ object AperturaManualDialog {
         AlertDialog.Builder(activity)
             .setTitle("🔓 Apertura Manual - $tituloContexto\nSeleccione el motivo:")
             .setItems(descripciones) { _, which ->
-                val tipoSeleccionado = tiposLog[which]
                 confirmarApertura(
-                    activity, lifecycleScope, tipoSeleccionado,
-                    contexto, idOperador, nombreOperador, idDispositivo
+                    activity, lifecycleScope, tiposLog[which],
+                    contexto, idOperador, nombreOperador, idDispositivo, idBarrera
                 )
             }
             .setNegativeButton("Cancelar", null)
@@ -115,19 +112,21 @@ object AperturaManualDialog {
         contexto: String,
         idOperador: Int,
         nombreOperador: String,
-        idDispositivo: String
+        idDispositivo: String,
+        idBarrera: Int
     ) {
+        val tituloContexto = if (contexto == "ENTRADA") "Entrada" else "Salida"
         AlertDialog.Builder(activity)
             .setTitle("Confirmar Apertura")
             .setMessage(
-                "¿Abrir la barrera por:\n\n" +
+                "¿Abrir barrera de $tituloContexto (ID $idBarrera) por:\n\n" +
                         "📋 ${tipoLog.descripcion}\n\n" +
                         "👤 Operador: $nombreOperador"
             )
             .setPositiveButton("ABRIR BARRERA") { _, _ ->
                 ejecutarApertura(
                     activity, lifecycleScope, tipoLog,
-                    contexto, idOperador, nombreOperador, idDispositivo
+                    contexto, idOperador, nombreOperador, idDispositivo, idBarrera
                 )
             }
             .setNegativeButton("Cancelar", null)
@@ -141,28 +140,29 @@ object AperturaManualDialog {
         contexto: String,
         idOperador: Int,
         nombreOperador: String,
-        idDispositivo: String
+        idDispositivo: String,
+        idBarrera: Int
     ) {
         val repository = AperturaManualRepository(activity)
 
         lifecycleScope.launch {
-            Toast.makeText(activity, "🚧 Abriendo barrera...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(activity, "🚧 Abriendo barrera ID $idBarrera...", Toast.LENGTH_SHORT).show()
 
             when (val result = repository.ejecutarAperturaManual(
                 idTipoLog = tipoLog.id,
                 idOperador = idOperador,
                 nombreOperador = nombreOperador,
                 idDispositivo = idDispositivo,
-                contexto = contexto
+                contexto = contexto,
+                idBarrera = idBarrera
             )) {
                 is AperturaManualResult.Success -> {
                     Toast.makeText(
                         activity,
-                        "✓ Barrera abierta\n${tipoLog.descripcion}",
+                        "✓ Barrera ID $idBarrera abierta\n${tipoLog.descripcion}",
                         Toast.LENGTH_LONG
                     ).show()
                 }
-
                 is AperturaManualResult.Error -> {
                     Toast.makeText(
                         activity,

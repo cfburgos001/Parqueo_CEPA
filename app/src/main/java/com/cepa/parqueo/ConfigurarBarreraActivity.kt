@@ -1,16 +1,12 @@
 package com.cepa.parqueo
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.widget.RadioButton
-import android.widget.TextView
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.cepa.parqueo.database.AperturaManualRepository
 import com.cepa.parqueo.database.BarreraItem
 import com.cepa.parqueo.database.BarrerasResult
@@ -23,7 +19,10 @@ class ConfigurarBarreraActivity : AppCompatActivity() {
     private lateinit var binding: ActivityConfigurarBarreraBinding
     private lateinit var repository: AperturaManualRepository
     private lateinit var dispositivoManager: DispositivoManager
-    private lateinit var adapter: BarreraAdapter
+
+    private var barreras = listOf<BarreraItem>()
+    private var idBarreraEntradaSeleccionada = 1
+    private var idBarreraSalidaSeleccionada = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,28 +36,20 @@ class ConfigurarBarreraActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "Configurar Barrera"
 
-        setupRecyclerView()
-        loadCurrentBarrera()
+        idBarreraEntradaSeleccionada = dispositivoManager.obtenerIdBarreraEntrada()
+        idBarreraSalidaSeleccionada = dispositivoManager.obtenerIdBarreraSalida()
+
         loadBarreras()
-    }
 
-    private fun setupRecyclerView() {
-        adapter = BarreraAdapter(dispositivoManager.obtenerIdBarrera()) { barreraId ->
-            seleccionarBarrera(barreraId)
+        binding.btnGuardarBarreras.setOnClickListener {
+            guardarBarreras()
         }
-        binding.rvBarreras.layoutManager = LinearLayoutManager(this)
-        binding.rvBarreras.adapter = adapter
-    }
-
-    private fun loadCurrentBarrera() {
-        val idBarreraActual = dispositivoManager.obtenerIdBarrera()
-        binding.tvBarreraActual.text = "Barrera asignada: ID $idBarreraActual"
     }
 
     private fun loadBarreras() {
         binding.progressBar.visibility = View.VISIBLE
+        binding.contentLayout.visibility = View.GONE
         binding.tvSinDatos.visibility = View.GONE
-        binding.rvBarreras.visibility = View.GONE
 
         lifecycleScope.launch {
             when (val result = repository.listarBarreras()) {
@@ -67,8 +58,9 @@ class ConfigurarBarreraActivity : AppCompatActivity() {
                     if (result.barreras.isEmpty()) {
                         binding.tvSinDatos.visibility = View.VISIBLE
                     } else {
-                        adapter.actualizarLista(result.barreras)
-                        binding.rvBarreras.visibility = View.VISIBLE
+                        barreras = result.barreras
+                        setupSpinners()
+                        binding.contentLayout.visibility = View.VISIBLE
                     }
                 }
                 is BarrerasResult.Error -> {
@@ -84,89 +76,56 @@ class ConfigurarBarreraActivity : AppCompatActivity() {
         }
     }
 
-    private fun seleccionarBarrera(idBarrera: Int) {
-        dispositivoManager.configurarIdBarrera(idBarrera)
-        binding.tvBarreraActual.text = "Barrera asignada: ID $idBarrera"
+    private fun setupSpinners() {
+        val nombres = barreras.map { "[ID ${it.id}]  ${it.barreraSeteo}" }
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, nombres)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+
+        binding.spinnerBarreraEntrada.adapter = adapter
+        val posEntrada = barreras.indexOfFirst { it.id == idBarreraEntradaSeleccionada }.coerceAtLeast(0)
+        binding.spinnerBarreraEntrada.setSelection(posEntrada)
+        binding.spinnerBarreraEntrada.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
+                idBarreraEntradaSeleccionada = barreras[pos].id
+            }
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
+
+        binding.spinnerBarreraSalida.adapter = adapter
+        val posSalida = barreras.indexOfFirst { it.id == idBarreraSalidaSeleccionada }.coerceAtLeast(0)
+        binding.spinnerBarreraSalida.setSelection(posSalida)
+        binding.spinnerBarreraSalida.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
+                idBarreraSalidaSeleccionada = barreras[pos].id
+            }
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
+    }
+
+    private fun guardarBarreras() {
+        dispositivoManager.configurarBarreraEntrada(idBarreraEntradaSeleccionada)
+        dispositivoManager.configurarBarreraSalida(idBarreraSalidaSeleccionada)
 
         lifecycleScope.launch {
             try {
-                dispositivoManager.persistirBarreraEnBD(idBarrera)
-                Toast.makeText(
-                    this@ConfigurarBarreraActivity,
-                    "✓ Barrera $idBarrera asignada correctamente",
-                    Toast.LENGTH_SHORT
-                ).show()
+                dispositivoManager.persistirBarrerasEnBD(
+                    idBarreraEntradaSeleccionada,
+                    idBarreraSalidaSeleccionada
+                )
             } catch (e: Exception) {
-                Toast.makeText(
-                    this@ConfigurarBarreraActivity,
-                    "✓ Barrera guardada localmente (sin sincronizar con BD)",
-                    Toast.LENGTH_SHORT
-                ).show()
+                // guardado local ya aplicado arriba
             }
+            Toast.makeText(
+                this@ConfigurarBarreraActivity,
+                "✓ Guardado\nEntrada → Barrera ID $idBarreraEntradaSeleccionada\nSalida  → Barrera ID $idBarreraSalidaSeleccionada",
+                Toast.LENGTH_LONG
+            ).show()
+            finish()
         }
     }
 
     override fun onSupportNavigateUp(): Boolean {
         onBackPressed()
         return true
-    }
-
-    inner class BarreraAdapter(
-        private var idSeleccionado: Int,
-        private val onSeleccion: (Int) -> Unit
-    ) : RecyclerView.Adapter<BarreraAdapter.BarreraViewHolder>() {
-
-        private val barreras = mutableListOf<BarreraItem>()
-
-        fun actualizarLista(nuevaLista: List<BarreraItem>) {
-            barreras.clear()
-            barreras.addAll(nuevaLista)
-            notifyDataSetChanged()
-        }
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BarreraViewHolder {
-            val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_barrera, parent, false)
-            return BarreraViewHolder(view)
-        }
-
-        override fun onBindViewHolder(holder: BarreraViewHolder, position: Int) {
-            holder.bind(barreras[position])
-        }
-
-        override fun getItemCount() = barreras.size
-
-        inner class BarreraViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            private val rbSeleccionar: RadioButton = itemView.findViewById(R.id.rbSeleccionarBarrera)
-            private val tvId: TextView = itemView.findViewById(R.id.tvIdBarrera)
-            private val tvNombre: TextView = itemView.findViewById(R.id.tvNombreBarrera)
-            private val tvEstado: TextView = itemView.findViewById(R.id.tvEstadoBarrera)
-
-            fun bind(barrera: BarreraItem) {
-                tvId.text = "ID: ${barrera.id}"
-                tvNombre.text = barrera.barreraSeteo
-                rbSeleccionar.isChecked = barrera.id == idSeleccionado
-
-                if (barrera.estadoBarrera) {
-                    tvEstado.text = "● Activa"
-                    tvEstado.setTextColor(itemView.context.getColor(android.R.color.holo_green_dark))
-                } else {
-                    tvEstado.text = "● Inactiva"
-                    tvEstado.setTextColor(itemView.context.getColor(android.R.color.holo_red_dark))
-                }
-
-                val clickHandler = View.OnClickListener {
-                    val prevSelected = idSeleccionado
-                    idSeleccionado = barrera.id
-                    val prevIndex = barreras.indexOfFirst { it.id == prevSelected }
-                    if (prevIndex >= 0) notifyItemChanged(prevIndex)
-                    notifyItemChanged(adapterPosition)
-                    onSeleccion(barrera.id)
-                }
-
-                rbSeleccionar.setOnClickListener(clickHandler)
-                itemView.setOnClickListener(clickHandler)
-            }
-        }
     }
 }

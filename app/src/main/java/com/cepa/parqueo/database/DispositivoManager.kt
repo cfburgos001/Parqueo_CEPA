@@ -13,9 +13,10 @@ class DispositivoManager(private val context: Context) {
     private val TAG = "DispositivoManager"
 
     companion object {
-        private const val PREFS_DEVICE           = "DeviceConfig"
+        private const val PREFS_DEVICE            = "DeviceConfig"
         private const val KEY_COBROS_HABILITADOS  = "cobros_habilitados_pos"
-        private const val KEY_ID_BARRERA          = "id_barrera_asignada"
+        private const val KEY_ID_BARRERA_ENTRADA  = "id_barrera_entrada"
+        private const val KEY_ID_BARRERA_SALIDA   = "id_barrera_salida"
     }
 
     suspend fun obtenerIdDispositivo(): String {
@@ -91,38 +92,53 @@ class DispositivoManager(private val context: Context) {
     }
 
     // =============================================
-    // BARRERA ASIGNADA
+    // BARRERAS (entrada y salida por separado)
     // =============================================
 
-    fun configurarIdBarrera(idBarrera: Int) {
+    fun configurarBarreraEntrada(idBarrera: Int) {
         val sharedPref = context.getSharedPreferences(PREFS_DEVICE, Context.MODE_PRIVATE)
-        sharedPref.edit().putInt(KEY_ID_BARRERA, idBarrera).apply()
-        Log.d(TAG, "Barrera asignada configurada: ID $idBarrera")
+        sharedPref.edit().putInt(KEY_ID_BARRERA_ENTRADA, idBarrera).apply()
+        Log.d(TAG, "Barrera de ENTRADA configurada: ID $idBarrera")
     }
 
-    fun obtenerIdBarrera(): Int {
+    fun obtenerIdBarreraEntrada(): Int {
         val sharedPref = context.getSharedPreferences(PREFS_DEVICE, Context.MODE_PRIVATE)
-        return sharedPref.getInt(KEY_ID_BARRERA, 1)
+        return sharedPref.getInt(KEY_ID_BARRERA_ENTRADA, 1)
     }
 
-    /** Persiste IdBarreraAsignada en IOT_Dispositivos para que sea visible desde el web */
-    suspend fun persistirBarreraEnBD(idBarrera: Int) {
+    fun configurarBarreraSalida(idBarrera: Int) {
+        val sharedPref = context.getSharedPreferences(PREFS_DEVICE, Context.MODE_PRIVATE)
+        sharedPref.edit().putInt(KEY_ID_BARRERA_SALIDA, idBarrera).apply()
+        Log.d(TAG, "Barrera de SALIDA configurada: ID $idBarrera")
+    }
+
+    fun obtenerIdBarreraSalida(): Int {
+        val sharedPref = context.getSharedPreferences(PREFS_DEVICE, Context.MODE_PRIVATE)
+        return sharedPref.getInt(KEY_ID_BARRERA_SALIDA, 1)
+    }
+
+    /** Persiste IdBarreraEntrada e IdBarreraSalida en IOT_Dispositivos */
+    suspend fun persistirBarrerasEnBD(idEntrada: Int, idSalida: Int) {
         withContext(Dispatchers.IO) {
             var connection: Connection? = null
             try {
                 connection = dbHelper.getConnection() ?: return@withContext
-
                 val idDispositivo = obtenerIdDispositivo()
-                val sql = "UPDATE IOT_Dispositivos SET IdBarreraAsignada = ? WHERE IdDispositivo = ?"
+                val sql = """
+                    UPDATE IOT_Dispositivos
+                    SET IdBarreraEntrada = ?, IdBarreraSalida = ?
+                    WHERE IdDispositivo = ?
+                """.trimIndent()
                 val stmt = connection.prepareStatement(sql)
-                stmt.setInt(1, idBarrera)
-                stmt.setString(2, idDispositivo)
+                stmt.setInt(1, idEntrada)
+                stmt.setInt(2, idSalida)
+                stmt.setString(3, idDispositivo)
                 stmt.executeUpdate()
                 stmt.close()
-
-                Log.d(TAG, "IdBarreraAsignada=$idBarrera persistido en BD para $idDispositivo")
+                Log.d(TAG, "Barreras persistidas - Entrada: $idEntrada, Salida: $idSalida")
             } catch (e: Exception) {
-                Log.e(TAG, "Error al persistir barrera en BD", e)
+                Log.e(TAG, "Error al persistir barreras en BD", e)
+                throw e
             } finally {
                 dbHelper.closeConnection(connection)
             }
@@ -191,23 +207,25 @@ class DispositivoManager(private val context: Context) {
                 resultSet.close()
                 callableStatement.close()
 
-                // Actualiza Entry, Exit e IdBarreraAsignada en un solo UPDATE
                 val sqlUpdate = """
                     UPDATE IOT_Dispositivos
-                    SET IdEntryDevice     = ?,
-                        IdExitDevice      = ?,
-                        IdBarreraAsignada = ?
+                    SET IdEntryDevice    = ?,
+                        IdExitDevice     = ?,
+                        IdBarreraEntrada = ?,
+                        IdBarreraSalida  = ?
                     WHERE IdDispositivo = ?
                 """.trimIndent()
                 val stmtUpdate = connection.prepareStatement(sqlUpdate)
                 stmtUpdate.setInt(1, idEntryDevice)
                 stmtUpdate.setInt(2, idExitDevice)
-                stmtUpdate.setInt(3, obtenerIdBarrera())
-                stmtUpdate.setString(4, idDispositivo)
+                stmtUpdate.setInt(3, obtenerIdBarreraEntrada())
+                stmtUpdate.setInt(4, obtenerIdBarreraSalida())
+                stmtUpdate.setString(5, idDispositivo)
                 stmtUpdate.executeUpdate()
                 stmtUpdate.close()
 
-                Log.d(TAG, "IDs actualizados - Entry: $idEntryDevice, Exit: $idExitDevice, Barrera: ${obtenerIdBarrera()}")
+                Log.d(TAG, "IDs actualizados - Entry: $idEntryDevice, Exit: $idExitDevice, " +
+                        "BarreraEntrada: ${obtenerIdBarreraEntrada()}, BarreraSlida: ${obtenerIdBarreraSalida()}")
 
             } catch (e: Exception) {
                 Log.e(TAG, "Error al registrar dispositivo en BD", e)
