@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F5F5F5">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:title="Configurar Barrera"
+            app:titleTextColor="@android:color/white"
+            android:background="#2E7D32"/>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="48dp"
+        android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/tvSinDatos"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="No se encontraron barreras. Ejecute el script multi_barrera_migration_v2.sql"
+        android:textSize="14sp"
+        android:textColor="#757575"
+        android:gravity="center"
+        android:padding="32dp"
+        android:visibility="gone"/>
+
+    <ScrollView
+        android:id="@+id/contentLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Info -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="#E8F5E9"
+                android:padding="12dp"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Asigna qu&#233; barrera f&#237;sica abre este dispositivo"
+                    android:textSize="13sp"
+                    android:textColor="#1B5E20"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="&#8226; ENTRADA: se activa cuando se registra el ingreso de un veh&#237;culo"
+                    android:textSize="12sp"
+                    android:textColor="#388E3C"
+                    android:layout_marginTop="4dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="&#8226; SALIDA: se activa cuando el veh&#237;culo sale del parqueo"
+                    android:textSize="12sp"
+                    android:textColor="#388E3C"
+                    android:layout_marginTop="2dp"/>
+            </LinearLayout>
+
+            <!-- Card ENTRADA -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="&#128682; Barrera de ENTRADA"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#1B5E20"
+                        android:layout_marginBottom="4dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Barrera que se abrir&#225; al registrar un ingreso"
+                        android:textSize="12sp"
+                        android:textColor="#757575"
+                        android:layout_marginBottom="12dp"/>
+
+                    <Spinner
+                        android:id="@+id/spinnerBarreraEntrada"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/abc_spinner_mtrl_am_alpha"
+                        android:padding="8dp"/>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Card SALIDA -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="&#128683; Barrera de SALIDA"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#B71C1C"
+                        android:layout_marginBottom="4dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Barrera que se abrir&#225; cuando el veh&#237;culo salga"
+                        android:textSize="12sp"
+                        android:textColor="#757575"
+                        android:layout_marginBottom="12dp"/>
+
+                    <Spinner
+                        android:id="@+id/spinnerBarreraSalida"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/abc_spinner_mtrl_am_alpha"
+                        android:padding="8dp"/>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnGuardarBarreras"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Guardar Configuraci&#243;n"
+                app:cornerRadius="8dp"
+                android:backgroundTint="#2E7D32"
+                android:layout_marginBottom="16dp"/>
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

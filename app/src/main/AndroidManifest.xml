@@ -66,7 +66,7 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <!-- ⭐ NUEVA: Activity Apertura/Cierre -->
+        <!-- Activity Apertura/Cierre -->
         <activity
             android:name="com.cepa.parqueo.AperturaCierreActivity"
             android:exported="false"
@@ -90,10 +90,15 @@
             android:screenOrientation="portrait"
             tools:replace="screenOrientation" />
 
-
         <activity
             android:name=".ConfigurarLogsAperturaActivity"
             android:label="Configurar Logs Apertura"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ConfigurarBarreraActivity"
+            android:label="Configurar Barrera"
             android:exported="false"
             android:screenOrientation="portrait" />
 
