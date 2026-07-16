@@ -18,6 +18,56 @@ class VehiculoRepository(private val context: Context) {
     private val TAG = "VehiculoRepository"
 
     /**
+     * Trae los datos del sitio (IOT_ControlDeSitio) — nombre comercial,
+     * dirección, teléfono, etc. Se llama UNA vez al iniciar sesión
+     * (LoginActivity) y el resultado se guarda en SiteConfigCache; la
+     * impresión de tickets no vuelve a consultar la BD para esto.
+     */
+    suspend fun obtenerConfigSitio(): ConfigSitioResult {
+        return withContext(Dispatchers.IO) {
+            var connection: Connection? = null
+            try {
+                connection = dbHelper.getConnection()
+
+                if (connection == null) {
+                    return@withContext ConfigSitioResult.Error("No se pudo conectar a la base de datos")
+                }
+
+                val sql = "{CALL dbo.IOT_sp_ObtenerConfigSitio}"
+                val callableStatement = connection.prepareCall(sql)
+                val resultSet = callableStatement.executeQuery()
+
+                if (resultSet.next()) {
+                    val config = ConfigSitio(
+                        nombreComercial = resultSet.getString("NombreComercial") ?: "PARQUEO",
+                        razonSocial = resultSet.getString("RazonSocial"),
+                        direccion = resultSet.getString("Direccion"),
+                        municipio = resultSet.getString("Municipio"),
+                        departamento = resultSet.getString("Departamento"),
+                        telefono = resultSet.getString("Telefono")
+                    )
+
+                    resultSet.close()
+                    callableStatement.close()
+
+                    Log.d(TAG, "✓ Config de sitio cargada: ${config.nombreComercial}")
+                    ConfigSitioResult.Success(config)
+                } else {
+                    resultSet.close()
+                    callableStatement.close()
+                    ConfigSitioResult.Error("No hay un sitio activo en IOT_ControlDeSitio (Activo = 1)")
+                }
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error al obtener config de sitio", e)
+                ConfigSitioResult.Error("Error: ${e.message}")
+            } finally {
+                dbHelper.closeConnection(connection)
+            }
+        }
+    }
+
+    /**
      *  Obtiene el modo de cobro actual (Escalonado/Sin Máximo)
      */
     suspend fun obtenerModoCobro(): ModoCobroResult {
@@ -179,14 +229,14 @@ class VehiculoRepository(private val context: Context) {
                     return@withContext RegistroEntradaResult.Error("No se pudo conectar a la base de datos")
                 }
 
-                val sql = "{CALL dbo.IOT_sp_RegistrarEntrada(?, ?, ?, ?, ?)}"
+                val sql = "{CALL dbo.IOT_sp_RegistrarEntradaApp(?, ?, ?, ?, ?)}"
                 val callableStatement = connection.prepareCall(sql)
 
                 callableStatement.setString(1, placa)
                 callableStatement.setString(2, usuario)
                 callableStatement.setInt(3, idOperador)
                 callableStatement.setString(4, idDispositivo)
-                callableStatement.setString(5, strRateKey)  // 
+                callableStatement.setString(5, strRateKey)  //
 
                 val resultSet = callableStatement.executeQuery()
 
@@ -431,6 +481,89 @@ class VehiculoRepository(private val context: Context) {
                 VehiculoResult.Error("Error SQL: ${e.message}")
             } catch (e: Exception) {
                 Log.e(TAG, "Error al buscar por código", e)
+                VehiculoResult.Error("Error: ${e.message}")
+            } finally {
+                dbHelper.closeConnection(connection)
+            }
+        }
+    }
+
+    /**
+     * Busca el registro MÁS RECIENTE de una placa, SIN filtrar por Estado.
+     * A diferencia de buscarVehiculoPorPlaca() (que solo encuentra vehículos
+     * 'DENTRO'), esta función encuentra cualquier visita — ya haya salido,
+     * esté pagada o no. Se usa para la sección de Reimpresión (ticket/factura)
+     * cuando un cliente dañó su comprobante físico.
+     *
+     * Si la placa tiene varias visitas históricas, regresa la más reciente
+     * (ORDER BY FechaEntrada DESC).
+     */
+    suspend fun buscarVehiculoParaReimpresion(placa: String): VehiculoResult {
+        return withContext(Dispatchers.IO) {
+            var connection: Connection? = null
+            try {
+                connection = dbHelper.getConnection()
+
+                if (connection == null) {
+                    return@withContext VehiculoResult.Error("No se pudo conectar a la base de datos")
+                }
+
+                val sql = """
+                    SELECT TOP 1 
+                        Id, 
+                        Placa, 
+                        FechaEntrada, 
+                        CodigoBarras, 
+                        Estado,
+                        ISNULL(bitPaid, 0) as bitPaid,
+                        FechaPago,
+                        ISNULL(Monto, 0.0) as Monto,
+                        ISNULL(strRateKey, 'L') as strRateKey,
+                        ISNULL(TiempoEstancia, 0) as TiempoEstancia,
+                        ISNULL(OperationType, 1) as OperationType
+                    FROM dbo.IOT_Vehiculos 
+                    WHERE Placa = ?
+                    ORDER BY FechaEntrada DESC
+                """
+
+                val preparedStatement = connection.prepareStatement(sql)
+                preparedStatement.setString(1, placa)
+
+                val resultSet = preparedStatement.executeQuery()
+
+                if (resultSet.next()) {
+                    val vehiculo = VehiculoDB(
+                        id = resultSet.getInt("Id"),
+                        placa = resultSet.getString("Placa"),
+                        fechaEntrada = resultSet.getTimestamp("FechaEntrada"),
+                        codigoBarras = resultSet.getString("CodigoBarras"),
+                        estado = resultSet.getString("Estado"),
+                        bitPaid = resultSet.getInt("bitPaid"),
+                        fechaPago = resultSet.getTimestamp("FechaPago"),
+                        monto = resultSet.getBigDecimal("Monto")?.toDouble() ?: 0.0,
+                        strRateKey = resultSet.getString("strRateKey") ?: "L",
+                        tiempoEstancia = resultSet.getInt("TiempoEstancia"),
+                        operationType = resultSet.getInt("OperationType")
+                    )
+
+                    resultSet.close()
+                    preparedStatement.close()
+
+                    Log.d(TAG, "✓ Vehículo encontrado para reimpresión: ${vehiculo.placa} - Estado: ${vehiculo.estado} - Pagado: ${vehiculo.bitPaid}")
+                    VehiculoResult.Found(vehiculo)
+                } else {
+                    resultSet.close()
+                    preparedStatement.close()
+
+                    Log.d(TAG, "✗ No hay registros para la placa: $placa")
+                    VehiculoResult.NotFound
+                }
+
+            } catch (e: SQLException) {
+                Log.e(TAG, "Error SQL al buscar vehículo para reimpresión", e)
+                VehiculoResult.Error("Error SQL: ${e.message}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error al buscar vehículo para reimpresión", e)
                 VehiculoResult.Error("Error: ${e.message}")
             } finally {
                 dbHelper.closeConnection(connection)
@@ -853,7 +986,8 @@ data class VehiculoDB(
     val fechaPago: Date? = null,
     val monto: Double = 0.0,
     val strRateKey: String = "A",
-    val tiempoEstancia: Int = 0
+    val tiempoEstancia: Int = 0,
+    val operationType: Int = 1  // 1=Efectivo, 2=Tarjeta, 3=Cortesía (usado en reimpresión de factura)
 ) {
     fun estaPagado(): Boolean = bitPaid == 1 && monto > 0.0
     fun tieneMontoRegistrado(): Boolean = monto > 0.0
@@ -898,6 +1032,19 @@ data class TarifaDetalle(
     val cobroIndefinido: Boolean,
     val modoCobroTexto: String,
     val descripcion: String
+)
+
+/**
+ * Datos del sitio (tabla IOT_ControlDeSitio), usados para que los
+ * tickets impresos ya no tengan el nombre del lugar quemado en el código.
+ */
+data class ConfigSitio(
+    val nombreComercial: String,
+    val razonSocial: String? = null,
+    val direccion: String? = null,
+    val municipio: String? = null,
+    val departamento: String? = null,
+    val telefono: String? = null
 )
 
 // ===== SEALED CLASSES =====
@@ -974,6 +1121,12 @@ sealed class ListaTarifasResult {
     data class Success(val tarifas: List<TarifaDetalle>) : ListaTarifasResult()
     data class Error(val message: String) : ListaTarifasResult()
 }
+
+sealed class ConfigSitioResult {
+    data class Success(val config: ConfigSitio) : ConfigSitioResult()
+    data class Error(val message: String) : ConfigSitioResult()
+}
+
 /**
  * Resultado de salida sin cobro
  */

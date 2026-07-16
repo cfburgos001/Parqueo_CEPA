@@ -76,7 +76,7 @@ object PrinterManager {
         // Encabezado
         out.write(byteArrayOf(0x1B, 0x61, 0x01)) // Centrar
         out.write(byteArrayOf(0x1B, 0x45, 0x01)) // Negrita on
-        out.write("CENTRO PANAMERICANO DE OJOS\n".utf8())
+        out.write("${com.cepa.parqueo.database.SiteConfigCache.nombreComercial()}\n".utf8())
         out.write("TICKET DE INGRESO\n".utf8())
         out.write(byteArrayOf(0x1B, 0x45, 0x00)) // Negrita off
         out.write("============================\n".utf8())

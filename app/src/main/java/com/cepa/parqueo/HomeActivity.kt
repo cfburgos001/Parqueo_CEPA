@@ -62,6 +62,12 @@ class HomeActivity : AppCompatActivity() {
             }
         }
 
+        // Reimpresión — disponible para todos los tipos de usuario, igual que Salida,
+        // ya que cualquiera en caseta puede necesitar reimprimir un ticket o factura.
+        binding.btnReimpresion.setOnClickListener {
+            startActivity(Intent(this, ReimpresionActivity::class.java))
+        }
+
         binding.btnCerrarSesion.setOnClickListener {
             showLogoutDialog()
         }
@@ -151,6 +157,10 @@ class HomeActivity : AppCompatActivity() {
             clear()
             apply()
         }
+
+        // Limpia el nombre/dirección del sitio en memoria — la próxima sesión
+        // (posiblemente en otro sitio con el mismo APK) debe recargarlo.
+        com.cepa.parqueo.database.SiteConfigCache.clear()
 
         val intent = Intent(this, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

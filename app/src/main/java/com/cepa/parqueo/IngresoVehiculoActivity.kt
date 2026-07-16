@@ -126,7 +126,12 @@ class IngresoVehiculoActivity : AppCompatActivity() {
         lifecycleScope.launch {
             when (val result = vehiculoRepository.listarTarifas()) {
                 is ListaTarifasResult.Success -> {
-                    tarifasDisponibles = result.tarifas
+                    // ⭐ IOT_sp_ListarTarifas ahora regresa TODAS las tarifas
+                    // (L, M, P, Z, T, E, EP) porque se usa también en Mantenimiento.
+                    // Este selector es solo para tipo de vehículo en el ingreso normal,
+                    // así que se filtra a L/M/P. Cortesía, Tarjeta y Tickets Extraviados
+                    // tienen sus propios flujos y no deben aparecer aquí.
+                    tarifasDisponibles = result.tarifas.filter { it.strRateKey in listOf("L", "M", "P") }
 
                     val opcionesTarifas = tarifasDisponibles.map { tarifa ->
                         "${tarifa.tipoTarifa} - $${String.format("%.2f", tarifa.precioPorHora)}/h"
@@ -273,16 +278,12 @@ class IngresoVehiculoActivity : AppCompatActivity() {
 
             when (result) {
                 is RegistroEntradaResult.Success -> {
-                    val tipoVehiculoTexto = when (strRateKeySeleccionado) {
-                        "M" -> "Moto"
-                        "C" -> "Camion"
-                        else -> "Vehiculo"
-                    }
+                    val textoTipoVehiculo = tipoVehiculoTexto(strRateKeySeleccionado)
 
                     Toast.makeText(
                         this@IngresoVehiculoActivity,
                         "✓ Entrada registrada exitosamente\n" +
-                                "Tipo: $tipoVehiculoTexto\n" +
+                                "Tipo: $textoTipoVehiculo\n" +
                                 "Código: ${result.codigoBarras}",
                         Toast.LENGTH_SHORT
                     ).show()
@@ -291,7 +292,7 @@ class IngresoVehiculoActivity : AppCompatActivity() {
                         uniqueId = result.codigoBarras,
                         plate = placa,
                         entryTime = Date(),
-                        vehicleType = tipoVehiculoTexto
+                        vehicleType = textoTipoVehiculo
                     )
 
                     ultimoTicketImpreso = receiptData

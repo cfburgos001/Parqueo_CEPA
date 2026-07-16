@@ -102,5 +102,24 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
+        <!-- Reimpresión: hub + búsqueda de ticket + búsqueda de factura -->
+        <activity
+            android:name=".ReimpresionActivity"
+            android:label="Reimpresión"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ReimprimirTicketActivity"
+            android:label="Reimprimir Ticket"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ReimprimirFacturaActivity"
+            android:label="Reimprimir Factura"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
     </application>
 </manifest>

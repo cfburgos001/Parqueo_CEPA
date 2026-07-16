@@ -7,8 +7,11 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
+import com.cepa.parqueo.database.ConfigSitioResult
 import com.cepa.parqueo.database.OperadorRepository
 import com.cepa.parqueo.database.OperadorResult
+import com.cepa.parqueo.database.SiteConfigCache
+import com.cepa.parqueo.database.VehiculoRepository
 import com.cepa.parqueo.databinding.ActivityLoginBinding
 import kotlinx.coroutines.launch
 
@@ -16,6 +19,7 @@ class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
     private lateinit var operadorRepository: OperadorRepository
+    private lateinit var vehiculoRepository: VehiculoRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,6 +27,7 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         operadorRepository = OperadorRepository(this)
+        vehiculoRepository = VehiculoRepository(this)
 
         setupUI()
 
@@ -87,6 +92,18 @@ class LoginActivity : AppCompatActivity() {
                         ).show()
 
                         saveSession(operador)
+
+                        // Carga los datos del sitio (nombre comercial, etc.) UNA vez por
+                        // sesión. Los tickets los leen desde SiteConfigCache — no vuelven
+                        // a tocar la BD en cada impresión. Si falla, no bloquea el login:
+                        // simplemente los tickets usarán el nombre genérico "PARQUEO".
+                        when (val configResult = vehiculoRepository.obtenerConfigSitio()) {
+                            is ConfigSitioResult.Success -> SiteConfigCache.set(configResult.config)
+                            is ConfigSitioResult.Error -> android.util.Log.w(
+                                "LoginActivity",
+                                "No se pudo cargar config de sitio: ${configResult.message}"
+                            )
+                        }
 
                         val intent = Intent(this@LoginActivity, HomeActivity::class.java)
                         intent.putExtra("USER_TYPE", operador.tipoUsuario)

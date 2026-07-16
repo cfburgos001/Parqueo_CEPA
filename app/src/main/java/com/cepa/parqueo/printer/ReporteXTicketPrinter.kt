@@ -84,7 +84,7 @@ object ReporteXTicketPrinter {
         // ========== ENCABEZADO ==========
         out.write(byteArrayOf(0x1B, 0x61, 0x01)) // Centrar
         out.write(byteArrayOf(0x1B, 0x45, 0x01)) // Negrita
-        out.write("CENTRO PANAMERICANO DE OJOS\n".utf8())
+        out.write("${com.cepa.parqueo.database.SiteConfigCache.nombreComercial()}\n".utf8())
         out.write("*** REPORTE X ***\n".utf8())
         out.write("(REPORTE INFORMATIVO)\n".utf8())
         out.write(byteArrayOf(0x1B, 0x45, 0x00))
