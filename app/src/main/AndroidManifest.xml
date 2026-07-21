@@ -121,5 +121,11 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".TicketPerdidoActivity"
+            android:label="Ticket Extraviado"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
     </application>
 </manifest>

@@ -68,6 +68,11 @@ class HomeActivity : AppCompatActivity() {
             startActivity(Intent(this, ReimpresionActivity::class.java))
         }
 
+        // Ticket Extraviado — disponible para todos, mismo criterio que Reimpresión.
+        binding.btnTicketPerdido.setOnClickListener {
+            startActivity(Intent(this, TicketPerdidoActivity::class.java))
+        }
+
         binding.btnCerrarSesion.setOnClickListener {
             showLogoutDialog()
         }
@@ -126,7 +131,7 @@ class HomeActivity : AppCompatActivity() {
             binding.bottomNavigation.menu.removeItem(R.id.nav_mantenimiento)
         }
 
-        // ⭐ NUEVO: Si es CAJA, ocultar opción de Ingreso del menú inferior
+        // NUEVO: Si es CAJA, ocultar opción de Ingreso del menú inferior
         if (!userType.canAccessEntry()) {
             binding.bottomNavigation.menu.removeItem(R.id.nav_ingreso)
         }

@@ -972,6 +972,128 @@ class VehiculoRepository(private val context: Context) {
             }
         }
     }
+
+    /**
+     * Genera un Ticket Extraviado (tarifa 'E', $10 fijo) — usado cuando un
+     * cliente perdió su ticket original. No pide placa: el SP genera su
+     * propio código (que queda como Placa Y CodigoBarras a la vez, igual
+     * que las entradas normales desde el fix de RegistrarEntradaApp).
+     */
+    suspend fun crearTicketExtraviado(idDispositivo: String, idOperador: Int): TicketExtraviadoResult {
+        return withContext(Dispatchers.IO) {
+            var connection: Connection? = null
+            try {
+                connection = dbHelper.getConnection()
+
+                if (connection == null) {
+                    return@withContext TicketExtraviadoResult.Error("No se pudo conectar a la base de datos")
+                }
+
+                val sql = "{CALL dbo.IOT_sp_CrearTicketExtraviado(?, ?)}"
+                val callableStatement = connection.prepareCall(sql)
+                callableStatement.setString(1, idDispositivo)
+                callableStatement.setInt(2, idOperador)
+
+                val resultSet = callableStatement.executeQuery()
+
+                if (resultSet.next()) {
+                    val exitoso = resultSet.getInt("Exitoso")
+                    val mensaje = resultSet.getString("Mensaje")
+
+                    if (exitoso == 1) {
+                        val id = resultSet.getInt("Id")
+                        val codigo = resultSet.getString("CodigoBarras")
+                        val monto = resultSet.getBigDecimal("Monto")?.toDouble() ?: 10.0
+
+                        resultSet.close()
+                        callableStatement.close()
+
+                        Log.d(TAG, "✓ Ticket extraviado creado: $codigo - $$monto")
+                        TicketExtraviadoResult.Success(id, codigo, monto, mensaje)
+                    } else {
+                        resultSet.close()
+                        callableStatement.close()
+
+                        Log.d(TAG, "✗ Error al crear ticket extraviado: $mensaje")
+                        TicketExtraviadoResult.Error(mensaje)
+                    }
+                } else {
+                    resultSet.close()
+                    callableStatement.close()
+                    TicketExtraviadoResult.Error("No se obtuvo respuesta del procedimiento")
+                }
+
+            } catch (e: SQLException) {
+                Log.e(TAG, "Error SQL al crear ticket extraviado", e)
+                TicketExtraviadoResult.Error("Error SQL: ${e.message}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error al crear ticket extraviado", e)
+                TicketExtraviadoResult.Error("Error: ${e.message}")
+            } finally {
+                dbHelper.closeConnection(connection)
+            }
+        }
+    }
+
+    /**
+     * Igual que crearTicketExtraviado() pero para vehículos pesados
+     * (tarifa 'EP', $25 fijo).
+     */
+    suspend fun crearTicketExtraviadoPesado(idDispositivo: String, idOperador: Int): TicketExtraviadoResult {
+        return withContext(Dispatchers.IO) {
+            var connection: Connection? = null
+            try {
+                connection = dbHelper.getConnection()
+
+                if (connection == null) {
+                    return@withContext TicketExtraviadoResult.Error("No se pudo conectar a la base de datos")
+                }
+
+                val sql = "{CALL dbo.IOT_sp_CrearTicketExtraviadoPesado(?, ?)}"
+                val callableStatement = connection.prepareCall(sql)
+                callableStatement.setString(1, idDispositivo)
+                callableStatement.setInt(2, idOperador)
+
+                val resultSet = callableStatement.executeQuery()
+
+                if (resultSet.next()) {
+                    val exitoso = resultSet.getInt("Exitoso")
+                    val mensaje = resultSet.getString("Mensaje")
+
+                    if (exitoso == 1) {
+                        val id = resultSet.getInt("Id")
+                        val codigo = resultSet.getString("CodigoBarras")
+                        val monto = resultSet.getBigDecimal("Monto")?.toDouble() ?: 25.0
+
+                        resultSet.close()
+                        callableStatement.close()
+
+                        Log.d(TAG, "✓ Ticket extraviado pesado creado: $codigo - $$monto")
+                        TicketExtraviadoResult.Success(id, codigo, monto, mensaje)
+                    } else {
+                        resultSet.close()
+                        callableStatement.close()
+
+                        Log.d(TAG, "✗ Error al crear ticket extraviado pesado: $mensaje")
+                        TicketExtraviadoResult.Error(mensaje)
+                    }
+                } else {
+                    resultSet.close()
+                    callableStatement.close()
+                    TicketExtraviadoResult.Error("No se obtuvo respuesta del procedimiento")
+                }
+
+            } catch (e: SQLException) {
+                Log.e(TAG, "Error SQL al crear ticket extraviado pesado", e)
+                TicketExtraviadoResult.Error("Error SQL: ${e.message}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error al crear ticket extraviado pesado", e)
+                TicketExtraviadoResult.Error("Error: ${e.message}")
+            } finally {
+                dbHelper.closeConnection(connection)
+            }
+        }
+    }
 }
 
 // ===== DATA CLASSES =====
@@ -1150,4 +1272,18 @@ sealed class PagoSinCobroResult {
     ) : PagoSinCobroResult()
 
     data class Error(val message: String) : PagoSinCobroResult()
+}
+
+/**
+ * Resultado de crear un ticket extraviado (normal o pesado)
+ */
+sealed class TicketExtraviadoResult {
+    data class Success(
+        val id: Int,
+        val codigo: String,
+        val monto: Double,
+        val mensaje: String
+    ) : TicketExtraviadoResult()
+
+    data class Error(val message: String) : TicketExtraviadoResult()
 }

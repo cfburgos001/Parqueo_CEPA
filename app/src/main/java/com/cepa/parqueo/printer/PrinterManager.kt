@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.widget.Toast
 import com.cepa.parqueo.ReceiptData
+import com.cepa.parqueo.TicketExtraviadoData
 import java.io.OutputStream
 import java.nio.charset.Charset
 import java.text.SimpleDateFormat
@@ -201,6 +202,111 @@ object PrinterManager {
             adapter.bondedDevices.any { it.address == PRINTER_MAC }
         } catch (e: Exception) {
             false
+        }
+    }
+
+    /**
+     * Imprime un Ticket Extraviado (normal o pesado). Reutiliza la misma
+     * conexión Bluetooth y el mismo generador de QR que printReceipt().
+     */
+    fun printTicketExtraviado(context: Context, data: TicketExtraviadoData) {
+        val fallbackText = buildTicketExtraviadoText(data)
+
+        try {
+            val device = getDevice()
+            if (device == null) {
+                showFallback(context, fallbackText, "Impresora no encontrada")
+                return
+            }
+
+            val adapter = BluetoothAdapter.getDefaultAdapter()
+            adapter?.cancelDiscovery()
+
+            val socket = try {
+                val socketSafe = device.createRfcommSocketToServiceRecord(SPP_UUID)
+                socketSafe.connect()
+                socketSafe
+            } catch (e1: Exception) {
+                try {
+                    val insecure = device.createInsecureRfcommSocketToServiceRecord(SPP_UUID)
+                    insecure.connect()
+                    insecure
+                } catch (e2: Exception) {
+                    showFallback(context, fallbackText, "No se pudo conectar")
+                    return
+                }
+            }
+
+            val outputStream: OutputStream = socket.outputStream
+            sendEscPosPrintExtraviado(outputStream, data)
+            outputStream.flush()
+            socket.close()
+
+            Toast.makeText(context, "Ticket extraviado impreso", Toast.LENGTH_SHORT).show()
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            showFallback(context, fallbackText, "Error: ${e.message}")
+        }
+    }
+
+    private fun sendEscPosPrintExtraviado(out: OutputStream, data: TicketExtraviadoData) {
+        out.write(byteArrayOf(0x1B, 0x40)) // Inicializar
+
+        out.write(byteArrayOf(0x1B, 0x61, 0x01)) // Centrar
+        out.write(byteArrayOf(0x1B, 0x45, 0x01)) // Negrita on
+        out.write("${com.cepa.parqueo.database.SiteConfigCache.nombreComercial()}\n".utf8())
+        out.write("${data.tipo}\n".utf8())
+        out.write(byteArrayOf(0x1B, 0x45, 0x00)) // Negrita off
+        out.write("============================\n".utf8())
+
+        printQRCode(out, data.codigo)
+
+        out.write(byteArrayOf(0x1B, 0x61, 0x00)) // Izquierda
+
+        val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val timeFormatter = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+
+        out.write("\n".utf8())
+        out.write("CODIGO: ${data.codigo}\n".utf8())
+        out.write("FECHA: ${dateFormatter.format(data.fecha)}\n".utf8())
+        out.write("HORA:  ${timeFormatter.format(data.fecha)}\n".utf8())
+        out.write("\n".utf8())
+
+        out.write(byteArrayOf(0x1B, 0x61, 0x01)) // Centrar
+        out.write(byteArrayOf(0x1D, 0x21, 0x11)) // Doble ancho + doble alto
+        out.write(byteArrayOf(0x1B, 0x45, 0x01))
+        out.write("MONTO A PAGAR\n".utf8())
+        out.write("$${String.format(Locale.US, "%.2f", data.monto)}\n".utf8())
+        out.write(byteArrayOf(0x1B, 0x45, 0x00))
+        out.write(byteArrayOf(0x1D, 0x21, 0x00)) // Tamaño normal
+        out.write("\n".utf8())
+
+        out.write("============================\n".utf8())
+        out.write(byteArrayOf(0x1B, 0x45, 0x01))
+        out.write("PRESENTE ESTE CODIGO EN CAJA\n".utf8())
+        out.write("PARA PAGAR Y RETIRAR SU VEHICULO\n".utf8())
+        out.write(byteArrayOf(0x1B, 0x45, 0x00))
+        out.write("============================\n".utf8())
+        out.write("\n\n".utf8())
+
+        out.write(byteArrayOf(0x1D, 0x56, 0x01)) // Corte
+    }
+
+    private fun buildTicketExtraviadoText(data: TicketExtraviadoData): String {
+        val dateFormatter = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
+        return buildString {
+            appendLine("${com.cepa.parqueo.database.SiteConfigCache.nombreComercial()} - ${data.tipo}")
+            appendLine("========================")
+            appendLine("[QR: ${data.codigo}]")
+            appendLine()
+            appendLine("CODIGO: ${data.codigo}")
+            appendLine(dateFormatter.format(data.fecha))
+            appendLine()
+            appendLine("MONTO A PAGAR: $${String.format(Locale.US, "%.2f", data.monto)}")
+            appendLine("========================")
+            appendLine("PRESENTE ESTE CODIGO EN CAJA")
+            appendLine("========================")
         }
     }
 
