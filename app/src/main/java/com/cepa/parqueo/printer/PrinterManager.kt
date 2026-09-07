@@ -173,7 +173,7 @@ object PrinterManager {
     private fun buildReceiptText(data: ReceiptData): String {
         val dateFormatter = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
         return buildString {
-            appendLine("CEPA - TICKET DE INGRESO")
+            appendLine("${com.cepa.parqueo.database.SiteConfigCache.nombreComercial()} - TICKET DE INGRESO")
             appendLine("========================")
             appendLine("[QR: ${data.plate}]")
             appendLine()

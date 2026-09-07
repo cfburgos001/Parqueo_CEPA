@@ -173,7 +173,7 @@ object ReporteXTicketPrinter {
         val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
 
         return buildString {
-            appendLine("CEPA")
+            appendLine(com.cepa.parqueo.database.SiteConfigCache.nombreComercial())
             appendLine("*** REPORTE X ***")
             appendLine("(REPORTE INFORMATIVO)")
             appendLine("================================")

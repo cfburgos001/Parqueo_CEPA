@@ -144,7 +144,7 @@ object CierreTicketPrinter {
             out.write("Total: ${data.vehiculosDentro}\n".utf8())
             out.write("\n".utf8())
 
-            // ⭐ CAMBIO: Solo listar placas (más compacto)
+            // Solo listar placas (más compacto)
             data.vehiculosDentroDetalle.forEachIndexed { index, vehiculo ->
                 val numero = index + 1
                 out.write("${numero}. ${vehiculo.placa}\n".utf8())
@@ -171,7 +171,7 @@ object CierreTicketPrinter {
         val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
 
         return buildString {
-            appendLine("CEPA")
+            appendLine(com.cepa.parqueo.database.SiteConfigCache.nombreComercial())
             appendLine("CIERRE DE CAJA")
             appendLine("================================")
             appendLine()

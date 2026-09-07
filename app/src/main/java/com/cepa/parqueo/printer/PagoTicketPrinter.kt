@@ -158,7 +158,7 @@ object PagoTicketPrinter {
         val tiempoTexto = if (horas > 0) "$horas h $minutos min" else "$minutos min"
 
         return buildString {
-            appendLine("CEPA - COMPROBANTE DE PAGO")
+            appendLine("${com.cepa.parqueo.database.SiteConfigCache.nombreComercial()} - COMPROBANTE DE PAGO")
             appendLine("================================")
             appendLine("PLACA: ${data.placa}")
             appendLine("--------------------------------")

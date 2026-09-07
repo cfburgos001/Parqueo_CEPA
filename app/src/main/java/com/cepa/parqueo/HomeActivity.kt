@@ -84,7 +84,7 @@ class HomeActivity : AppCompatActivity() {
             binding.btnMantenimiento.visibility = View.GONE
         }
 
-        // ⭐ NUEVO: Si es CAJA, ocultar botón de Ingreso
+        //  Si es CAJA, ocultar botón de Ingreso
         if (!userType.canAccessEntry()) {
             binding.btnIngresoVehiculo.visibility = View.GONE
         }
