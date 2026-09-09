@@ -2,7 +2,6 @@ package com.cepa.parqueo
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import com.cepa.parqueo.databinding.ActivityReimpresionBinding
 
 /**
@@ -10,17 +9,15 @@ import com.cepa.parqueo.databinding.ActivityReimpresionBinding
  * (por si el QR físico está dañado) o la factura de pago (por si el
  * cliente dañó su comprobante). Ambas opciones buscan por placa.
  */
-class ReimpresionActivity : AppCompatActivity() {
+class ReimpresionActivity : DrawerActivity() {
 
     private lateinit var binding: ActivityReimpresionBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityReimpresionBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        setContentViewWithDrawer(binding.root, R.id.nav_reimpresion)
+        supportActionBar?.title = "Reimpresión"
 
         binding.btnReimprimirTicket.setOnClickListener {
             startActivity(Intent(this, ReimprimirTicketActivity::class.java))
@@ -29,10 +26,5 @@ class ReimpresionActivity : AppCompatActivity() {
         binding.btnReimprimirFactura.setOnClickListener {
             startActivity(Intent(this, ReimprimirFacturaActivity::class.java))
         }
-    }
-
-    override fun onSupportNavigateUp(): Boolean {
-        onBackPressed()
-        return true
     }
 }

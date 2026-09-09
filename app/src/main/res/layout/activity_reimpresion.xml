@@ -4,61 +4,49 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F5F5F5">
-
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:title="Reimpresión"
-            app:titleTextColor="@android:color/white"
-            android:background="#1976D2"/>
-    </com.google.android.material.appbar.AppBarLayout>
+    android:background="@color/surface_background">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="24dp"
+        android:padding="@dimen/space_lg"
         android:gravity="center">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="32dp"
+            android:layout_marginBottom="@dimen/space_xl"
             android:text="Busque un vehículo por placa para reimprimir su comprobante."
             android:textAlignment="center"
-            android:textColor="#212121"
-            android:textSize="16sp" />
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/text_body" />
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/btnReimprimirTicket"
             android:layout_width="match_parent"
             android:layout_height="120dp"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp"
+            android:layout_marginBottom="@dimen/space_md"
+            app:cardCornerRadius="@dimen/radius_lg"
+            app:cardElevation="@dimen/elevation_card"
             android:clickable="true"
             android:focusable="true"
             android:foreground="?android:attr/selectableItemBackground"
-            app:cardBackgroundColor="#1E88E5">
+            app:cardBackgroundColor="@color/action_entry">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:padding="16dp">
+                android:padding="@dimen/space_md">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🎫"
-                    android:textSize="40sp"/>
+                <ImageView
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:src="@drawable/ic_ticket_24"
+                    app:tint="@color/on_primary"
+                    android:contentDescription="@null" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -66,16 +54,16 @@
                     android:text="Reimprimir Ticket"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:textColor="@android:color/white"
-                    android:layout_marginTop="8dp"/>
+                    android:textColor="@color/text_on_primary"
+                    android:layout_marginTop="@dimen/space_sm" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Ticket de entrada dañado o QR ilegible"
                     android:textSize="12sp"
-                    android:textColor="@android:color/white"
-                    android:textAlignment="center"/>
+                    android:textColor="@color/text_on_primary"
+                    android:textAlignment="center" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -83,25 +71,26 @@
             android:id="@+id/btnReimprimirFactura"
             android:layout_width="match_parent"
             android:layout_height="120dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp"
+            app:cardCornerRadius="@dimen/radius_lg"
+            app:cardElevation="@dimen/elevation_card"
             android:clickable="true"
             android:focusable="true"
             android:foreground="?android:attr/selectableItemBackground"
-            app:cardBackgroundColor="#2E7D32">
+            app:cardBackgroundColor="@color/status_success">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:padding="16dp">
+                android:padding="@dimen/space_md">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🧾"
-                    android:textSize="40sp"/>
+                <ImageView
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:src="@drawable/ic_receipt_24"
+                    app:tint="@color/on_primary"
+                    android:contentDescription="@null" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -109,19 +98,17 @@
                     android:text="Reimprimir Factura"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:textColor="@android:color/white"
-                    android:layout_marginTop="8dp"/>
+                    android:textColor="@color/text_on_primary"
+                    android:layout_marginTop="@dimen/space_sm" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Solo para tickets que ya fueron pagados"
                     android:textSize="12sp"
-                    android:textColor="@android:color/white"
-                    android:textAlignment="center"/>
+                    android:textColor="@color/text_on_primary"
+                    android:textAlignment="center" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
-
     </LinearLayout>
-
 </LinearLayout>

@@ -3,7 +3,6 @@ package com.cepa.parqueo
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.cepa.parqueo.database.ListaTarifasResult
 import com.cepa.parqueo.database.TicketExtraviadoResult
@@ -24,7 +23,7 @@ import java.util.Date
  * 'EP') en vez de estar fijo en el botón — si cambias el precio en
  * IOT_Tarifas, esta pantalla lo refleja solo.
  */
-class TicketPerdidoActivity : AppCompatActivity() {
+class TicketPerdidoActivity : DrawerActivity() {
 
     private lateinit var binding: ActivityTicketPerdidoBinding
     private lateinit var vehiculoRepository: VehiculoRepository
@@ -38,13 +37,11 @@ class TicketPerdidoActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityTicketPerdidoBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContentViewWithDrawer(binding.root, R.id.nav_ticket_perdido)
+        supportActionBar?.title = "Ticket Extraviado"
 
         vehiculoRepository = VehiculoRepository(this)
         cargarDatosSesion()
-
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         binding.btnTicketNormal.setOnClickListener { confirmarYGenerar(esPesado = false) }
         binding.btnTicketPesado.setOnClickListener { confirmarYGenerar(esPesado = true) }
@@ -137,10 +134,5 @@ class TicketPerdidoActivity : AppCompatActivity() {
             binding.btnTicketNormal.isEnabled = true
             binding.btnTicketPesado.isEnabled = true
         }
-    }
-
-    override fun onSupportNavigateUp(): Boolean {
-        onBackPressed()
-        return true
     }
 }

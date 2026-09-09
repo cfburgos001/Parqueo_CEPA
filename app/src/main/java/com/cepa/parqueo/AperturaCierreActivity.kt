@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.cepa.parqueo.database.AperturaCierreRepository
 import com.cepa.parqueo.database.AperturaResult
@@ -21,7 +20,7 @@ import java.util.Locale
 /**
  * Activity para Apertura y Cierre de Caja
  */
-class AperturaCierreActivity : AppCompatActivity() {
+class AperturaCierreActivity : DrawerActivity() {
 
     private lateinit var binding: ActivityAperturaCierreBinding
     private lateinit var repository: AperturaCierreRepository
@@ -37,7 +36,7 @@ class AperturaCierreActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAperturaCierreBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContentViewWithDrawer(binding.root, R.id.nav_apertura_cierre)
 
         repository = AperturaCierreRepository(this)
         dispositivoManager = DispositivoManager(this)
@@ -58,8 +57,6 @@ class AperturaCierreActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "Apertura y Cierre de Caja"
 
         val dateFormat = SimpleDateFormat("EEEE, dd 'de' MMMM 'de' yyyy", Locale("es", "SV"))
@@ -329,10 +326,6 @@ class AperturaCierreActivity : AppCompatActivity() {
         }
     }
 
-    override fun onSupportNavigateUp(): Boolean {
-        onBackPressed()
-        return true
-    }
 }
 
 /**
