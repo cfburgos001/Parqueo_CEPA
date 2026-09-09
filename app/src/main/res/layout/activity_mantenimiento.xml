@@ -4,20 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F5F5F5">
-
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:title="Mantenimiento"
-            app:titleTextColor="@android:color/white"
-            android:background="#1976D2"/>
-    </com.google.android.material.appbar.AppBarLayout>
+    android:background="@color/surface_background">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -28,21 +15,21 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="@dimen/space_md">
 
             <!-- SECCIÓN: GESTIÓN DE USUARIOS -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp"
-                android:layout_marginBottom="16dp">
+                app:cardCornerRadius="@dimen/radius_md"
+                app:cardElevation="@dimen/elevation_card"
+                android:layout_marginBottom="@dimen/space_md">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="@dimen/space_md">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -50,16 +37,16 @@
                         android:text="&#128101; Gestión de Usuarios"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="#0D47A1"
-                        android:layout_marginBottom="8dp"/>
+                        android:textColor="@color/brand_primary"
+                        android:layout_marginBottom="@dimen/space_sm"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Administrar operadores y usuarios del sistema"
                         android:textSize="14sp"
-                        android:textColor="#757575"
-                        android:layout_marginBottom="12dp"/>
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="@dimen/space_sm"/>
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnGestionUsuarios"
@@ -67,20 +54,20 @@
                         android:layout_height="wrap_content"
                         android:text="Gestionar Usuarios"
                         app:icon="@android:drawable/ic_menu_manage"
-                        app:cornerRadius="8dp"/>
+                        app:cornerRadius="@dimen/radius_sm"/>
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnConfigLogsApertura"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
-                        android:layout_marginEnd="16dp"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginStart="@dimen/space_md"
+                        android:layout_marginEnd="@dimen/space_md"
+                        android:layout_marginTop="@dimen/space_sm"
                         android:text="&#9881; Configurar Logs de Apertura Manual"
                         android:textSize="14sp"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        app:strokeColor="#1565C0"
-                        app:cornerRadius="8dp" />
+                        app:strokeColor="@color/brand_primary_light"
+                        app:cornerRadius="@dimen/radius_sm" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -89,15 +76,15 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp"
-                android:layout_marginBottom="16dp">
+                app:cardCornerRadius="@dimen/radius_md"
+                app:cardElevation="@dimen/elevation_card"
+                android:layout_marginBottom="@dimen/space_md">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="@dimen/space_md">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -105,31 +92,31 @@
                         android:text="&#128679; Barreras Asignadas"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="#0D47A1"
-                        android:layout_marginBottom="8dp"/>
+                        android:textColor="@color/brand_primary"
+                        android:layout_marginBottom="@dimen/space_sm"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Barreras f&#237;sicas que controla este dispositivo"
                         android:textSize="14sp"
-                        android:textColor="#757575"
-                        android:layout_marginBottom="12dp"/>
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="@dimen/space_sm"/>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:layout_marginBottom="6dp">
+                        android:layout_marginBottom="@dimen/space_xs">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="&#128682; Entrada:"
                             android:textSize="14sp"
-                            android:textColor="#1B5E20"
+                            android:textColor="@color/status_success"
                             android:textStyle="bold"
-                            android:layout_marginEnd="8dp"/>
+                            android:layout_marginEnd="@dimen/space_sm"/>
 
                         <TextView
                             android:id="@+id/tvBarreraEntrada"
@@ -138,23 +125,23 @@
                             android:text="ID 1"
                             android:textSize="14sp"
                             android:textStyle="bold"
-                            android:textColor="#2E7D32"/>
+                            android:textColor="@color/status_success"/>
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:layout_marginBottom="16dp">
+                        android:layout_marginBottom="@dimen/space_md">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="&#128683; Salida: "
                             android:textSize="14sp"
-                            android:textColor="#B71C1C"
+                            android:textColor="@color/status_danger"
                             android:textStyle="bold"
-                            android:layout_marginEnd="8dp"/>
+                            android:layout_marginEnd="@dimen/space_sm"/>
 
                         <TextView
                             android:id="@+id/tvBarreraSalida"
@@ -163,7 +150,7 @@
                             android:text="ID 1"
                             android:textSize="14sp"
                             android:textStyle="bold"
-                            android:textColor="#C62828"/>
+                            android:textColor="@color/status_danger"/>
                     </LinearLayout>
 
                     <com.google.android.material.button.MaterialButton
@@ -171,11 +158,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Configurar Barreras"
-                        android:textColor="#2E7D32"
+                        android:textColor="@color/status_success"
                         app:icon="@android:drawable/ic_menu_manage"
-                        app:cornerRadius="8dp"
+                        app:cornerRadius="@dimen/radius_sm"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        app:strokeColor="#2E7D32"/>
+                        app:strokeColor="@color/status_success"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -183,15 +170,15 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp"
-                android:layout_marginBottom="16dp">
+                app:cardCornerRadius="@dimen/radius_md"
+                app:cardElevation="@dimen/elevation_card"
+                android:layout_marginBottom="@dimen/space_md">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="@dimen/space_md">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -199,32 +186,32 @@
                         android:text="&#128176; Modo de Cobro (Global)"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="#0D47A1"
-                        android:layout_marginBottom="8dp"/>
+                        android:textColor="@color/brand_primary"
+                        android:layout_marginBottom="@dimen/space_sm"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Selecciona el tipo de cobro que aplicar&#225; a todos los veh&#237;culos"
                         android:textSize="14sp"
-                        android:textColor="#757575"
-                        android:layout_marginBottom="12dp"/>
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="@dimen/space_sm"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="&#9888;&#65039; Este cambio afecta a TODOS los POS conectados a la misma base de datos"
                         android:textSize="12sp"
-                        android:textColor="#FF9800"
+                        android:textColor="@color/status_warning"
                         android:textStyle="italic"
-                        android:layout_marginBottom="16dp"/>
+                        android:layout_marginBottom="@dimen/space_md"/>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="@dimen/space_sm">
 
                         <TextView
                             android:layout_width="0dp"
@@ -232,7 +219,7 @@
                             android:layout_weight="1"
                             android:text="Modo Sin M&#225;ximo:"
                             android:textSize="16sp"
-                            android:textColor="#212121"
+                            android:textColor="@color/text_primary"
                             android:textStyle="bold"/>
 
                         <com.google.android.material.switchmaterial.SwitchMaterial
@@ -248,17 +235,17 @@
                         android:layout_height="wrap_content"
                         android:text="&#10003; Modo Activo: ESCALONADO"
                         android:textSize="14sp"
-                        android:textColor="@android:color/holo_green_dark"
+                        android:textColor="@color/status_success"
                         android:textStyle="bold"
-                        android:layout_marginBottom="16dp"/>
+                        android:layout_marginBottom="@dimen/space_md"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Opciones:\n&#8226; APAGADO (Escalonado): Tarifas con tope diario\n&#8226; ENCENDIDO (Sin M&#225;ximo): Cobro por hora sin l&#237;mite"
                         android:textSize="12sp"
-                        android:textColor="#757575"
-                        android:lineSpacingExtra="4dp"/>
+                        android:textColor="@color/text_secondary"
+                        android:lineSpacingExtra="@dimen/space_xs"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -266,22 +253,22 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp"
-                android:layout_marginBottom="16dp">
+                app:cardCornerRadius="@dimen/radius_md"
+                app:cardElevation="@dimen/elevation_card"
+                android:layout_marginBottom="@dimen/space_md">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="@dimen/space_md">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="@dimen/space_sm">
 
                         <TextView
                             android:layout_width="0dp"
@@ -290,7 +277,7 @@
                             android:text="&#128181; Tarifas Actuales"
                             android:textSize="18sp"
                             android:textStyle="bold"
-                            android:textColor="#0D47A1"/>
+                            android:textColor="@color/brand_primary"/>
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnRecargarTarifas"
@@ -306,7 +293,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
-                        android:layout_marginVertical="16dp"
+                        android:layout_marginVertical="@dimen/space_md"
+                        android:indeterminateTint="@color/brand_primary"
                         android:visibility="gone"/>
 
                     <TextView
@@ -315,9 +303,9 @@
                         android:layout_height="wrap_content"
                         android:text="Cargando tarifas..."
                         android:textSize="14sp"
-                        android:textColor="#212121"
+                        android:textColor="@color/text_primary"
                         android:fontFamily="monospace"
-                        android:lineSpacingExtra="4dp"
+                        android:lineSpacingExtra="@dimen/space_xs"
                         android:visibility="gone"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -326,15 +314,15 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp"
-                android:layout_marginBottom="16dp">
+                app:cardCornerRadius="@dimen/radius_md"
+                app:cardElevation="@dimen/elevation_card"
+                android:layout_marginBottom="@dimen/space_md">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="@dimen/space_md">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -342,32 +330,32 @@
                         android:text="&#128179; Configuraci&#243;n de Cobros en POS"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="#0D47A1"
-                        android:layout_marginBottom="8dp"/>
+                        android:textColor="@color/brand_primary"
+                        android:layout_marginBottom="@dimen/space_sm"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Habilitar o deshabilitar la funci&#243;n de cobro en este POS"
                         android:textSize="14sp"
-                        android:textColor="#757575"
-                        android:layout_marginBottom="12dp"/>
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="@dimen/space_sm"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="&#9888;&#65039; Nota: La validaci&#243;n de tiempo de gracia siempre permanecer&#225; activa"
                         android:textSize="12sp"
-                        android:textColor="#FF9800"
+                        android:textColor="@color/status_warning"
                         android:textStyle="italic"
-                        android:layout_marginBottom="16dp"/>
+                        android:layout_marginBottom="@dimen/space_md"/>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="@dimen/space_sm">
 
                         <TextView
                             android:layout_width="0dp"
@@ -375,7 +363,7 @@
                             android:layout_weight="1"
                             android:text="Habilitar Cobros en POS:"
                             android:textSize="16sp"
-                            android:textColor="#212121"
+                            android:textColor="@color/text_primary"
                             android:textStyle="bold"/>
 
                         <com.google.android.material.switchmaterial.SwitchMaterial
@@ -391,17 +379,17 @@
                         android:layout_height="wrap_content"
                         android:text="&#10003; Este POS puede procesar pagos"
                         android:textSize="14sp"
-                        android:textColor="@android:color/holo_green_dark"
+                        android:textColor="@color/status_success"
                         android:textStyle="bold"
-                        android:layout_marginBottom="12dp"/>
+                        android:layout_marginBottom="@dimen/space_sm"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Casos de uso:\n&#8226; Habilitar: POS cobra directamente\n&#8226; Deshabilitar: Solo PayStation (POS solo valida salidas)"
                         android:textSize="12sp"
-                        android:textColor="#757575"
-                        android:lineSpacingExtra="4dp"/>
+                        android:textColor="@color/text_secondary"
+                        android:lineSpacingExtra="@dimen/space_xs"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -409,15 +397,15 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp"
-                android:layout_marginBottom="16dp">
+                app:cardCornerRadius="@dimen/radius_md"
+                app:cardElevation="@dimen/elevation_card"
+                android:layout_marginBottom="@dimen/space_md">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="@dimen/space_md">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -425,24 +413,24 @@
                         android:text="&#9201;&#65039; Configuraci&#243;n de Tiempo de Gracia"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="#0D47A1"
-                        android:layout_marginBottom="8dp"/>
+                        android:textColor="@color/brand_primary"
+                        android:layout_marginBottom="@dimen/space_sm"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Tiempo m&#225;ximo permitido entre el pago y la salida del veh&#237;culo"
                         android:textSize="14sp"
-                        android:textColor="#757575"
-                        android:layout_marginBottom="12dp"/>
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="@dimen/space_sm"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Tiempo de Gracia Actual:"
                         android:textSize="14sp"
-                        android:textColor="#757575"
-                        android:layout_marginBottom="4dp"/>
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="@dimen/space_xs"/>
 
                     <TextView
                         android:id="@+id/tvTiempoGraciaActual"
@@ -451,8 +439,8 @@
                         android:text="15 minutos"
                         android:textSize="20sp"
                         android:textStyle="bold"
-                        android:textColor="#4CAF50"
-                        android:layout_marginBottom="16dp"/>
+                        android:textColor="@color/status_success"
+                        android:layout_marginBottom="@dimen/space_md"/>
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilTiempoGracia"
@@ -460,7 +448,7 @@
                         android:layout_height="wrap_content"
                         android:hint="Nuevo Tiempo de Gracia (minutos)"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="@dimen/space_sm">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etTiempoGracia"
@@ -477,7 +465,7 @@
                         android:layout_height="wrap_content"
                         android:text="Guardar Tiempo de Gracia"
                         app:icon="@android:drawable/ic_menu_save"
-                        app:cornerRadius="8dp"
+                        app:cornerRadius="@dimen/radius_sm"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -486,15 +474,15 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp"
-                android:layout_marginBottom="16dp">
+                app:cardCornerRadius="@dimen/radius_md"
+                app:cardElevation="@dimen/elevation_card"
+                android:layout_marginBottom="@dimen/space_md">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="@dimen/space_md">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -502,16 +490,16 @@
                         android:text="&#128241; Configuraci&#243;n de Dispositivo"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="#0D47A1"
-                        android:layout_marginBottom="8dp"/>
+                        android:textColor="@color/brand_primary"
+                        android:layout_marginBottom="@dimen/space_sm"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="ID del Dispositivo:"
                         android:textSize="14sp"
-                        android:textColor="#757575"
-                        android:layout_marginBottom="4dp"/>
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="@dimen/space_xs"/>
 
                     <TextView
                         android:id="@+id/tvIdDispositivo"
@@ -520,16 +508,16 @@
                         android:text="Cargando..."
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="#212121"
-                        android:layout_marginBottom="8dp"/>
+                        android:textColor="@color/text_primary"
+                        android:layout_marginBottom="@dimen/space_sm"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Tipo:"
                         android:textSize="14sp"
-                        android:textColor="#757575"
-                        android:layout_marginBottom="4dp"/>
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="@dimen/space_xs"/>
 
                     <TextView
                         android:id="@+id/tvTipoDispositivo"
@@ -538,8 +526,8 @@
                         android:text="MIXTO"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="#212121"
-                        android:layout_marginBottom="12dp"/>
+                        android:textColor="@color/text_primary"
+                        android:layout_marginBottom="@dimen/space_sm"/>
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnConfigDispositivo"
@@ -547,7 +535,7 @@
                         android:layout_height="wrap_content"
                         android:text="Configurar Dispositivo"
                         app:icon="@android:drawable/ic_menu_edit"
-                        app:cornerRadius="8dp"
+                        app:cornerRadius="@dimen/radius_sm"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -556,15 +544,15 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp"
-                android:layout_marginBottom="16dp">
+                app:cardCornerRadius="@dimen/radius_md"
+                app:cardElevation="@dimen/elevation_card"
+                android:layout_marginBottom="@dimen/space_md">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="@dimen/space_md">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -572,8 +560,8 @@
                         android:text="&#128421;&#65039; Configuraci&#243;n del Servidor"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="#0D47A1"
-                        android:layout_marginBottom="12dp"/>
+                        android:textColor="@color/brand_primary"
+                        android:layout_marginBottom="@dimen/space_sm"/>
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilServerIp"
@@ -581,7 +569,7 @@
                         android:layout_height="wrap_content"
                         android:hint="IP del Servidor"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="@dimen/space_sm">
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etServerIp"
                             android:layout_width="match_parent"
@@ -596,7 +584,7 @@
                         android:layout_height="wrap_content"
                         android:hint="Puerto"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="@dimen/space_sm">
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etServerPort"
                             android:layout_width="match_parent"
@@ -611,7 +599,7 @@
                         android:layout_height="wrap_content"
                         android:hint="Nombre de la Base de Datos"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="@dimen/space_sm">
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etDatabaseName"
                             android:layout_width="match_parent"
@@ -626,7 +614,7 @@
                         android:layout_height="wrap_content"
                         android:hint="Usuario de la BD"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="@dimen/space_sm">
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etDbUsername"
                             android:layout_width="match_parent"
@@ -642,7 +630,7 @@
                         android:hint="Contrase&#241;a de la BD"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         app:endIconMode="password_toggle"
-                        android:layout_marginBottom="16dp">
+                        android:layout_marginBottom="@dimen/space_md">
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etDbPassword"
                             android:layout_width="match_parent"
@@ -657,8 +645,8 @@
                         android:layout_height="wrap_content"
                         android:text="Guardar Configuraci&#243;n"
                         android:textSize="14sp"
-                        app:cornerRadius="8dp"
-                        android:layout_marginBottom="8dp"/>
+                        app:cornerRadius="@dimen/radius_sm"
+                        android:layout_marginBottom="@dimen/space_sm"/>
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnProbarConexion"
@@ -666,9 +654,9 @@
                         android:layout_height="wrap_content"
                         android:text="Probar Conexi&#243;n"
                         android:textSize="14sp"
-                        app:cornerRadius="8dp"
+                        app:cornerRadius="@dimen/radius_sm"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_marginBottom="8dp"/>
+                        android:layout_marginBottom="@dimen/space_sm"/>
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnRestaurar"
@@ -676,7 +664,7 @@
                         android:layout_height="wrap_content"
                         android:text="Restaurar Valores"
                         android:textSize="14sp"
-                        app:cornerRadius="8dp"
+                        app:cornerRadius="@dimen/radius_sm"
                         style="@style/Widget.MaterialComponents.Button.TextButton"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import com.cepa.parqueo.database.ConnectionResult
@@ -17,7 +16,7 @@ import com.cepa.parqueo.database.VehiculoRepository
 import com.cepa.parqueo.databinding.ActivityMantenimientoBinding
 import kotlinx.coroutines.launch
 
-class MantenimientoActivity : AppCompatActivity() {
+class MantenimientoActivity : DrawerActivity() {
 
     private lateinit var binding: ActivityMantenimientoBinding
     private lateinit var databaseHelper: DatabaseHelper
@@ -27,7 +26,7 @@ class MantenimientoActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMantenimientoBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContentViewWithDrawer(binding.root, R.id.nav_mantenimiento)
 
         databaseHelper = DatabaseHelper(this)
         dispositivoManager = DispositivoManager(this)
@@ -49,8 +48,6 @@ class MantenimientoActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "Mantenimiento"
 
         binding.btnGestionUsuarios.setOnClickListener {
@@ -426,5 +423,4 @@ class MantenimientoActivity : AppCompatActivity() {
         return parts.all { part -> val num = part.toIntOrNull(); num != null && num in 0..255 }
     }
 
-    override fun onSupportNavigateUp(): Boolean { onBackPressed(); return true }
 }
