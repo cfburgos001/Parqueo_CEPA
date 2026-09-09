@@ -31,9 +31,11 @@ class LoginActivity : AppCompatActivity() {
 
         setupUI()
 
-        // Botón de debug (mantén presionado el botón de login)
+        // Botón de debug (mantén presionado el botón de login) — pide
+        // contraseña antes de mostrar cualquier dato de conexión o dejar
+        // entrar a Mantenimiento.
         binding.btnLogin.setOnLongClickListener {
-            mostrarInfoConexion()
+            solicitarPasswordDebug()
             true
         }
     }
@@ -123,7 +125,7 @@ class LoginActivity : AppCompatActivity() {
                                 binding.btnLogin.isEnabled = true
                             }
                             .setNegativeButton("Ver Configuración") { _, _ ->
-                                mostrarInfoConexion()
+                                solicitarPasswordDebug()
                                 binding.btnLogin.isEnabled = true
                             }
                             .show()
@@ -141,6 +143,35 @@ class LoginActivity : AppCompatActivity() {
                     .show()
             }
         }
+    }
+
+    /**
+     * Contraseña de acceso a la pantalla de diagnóstico/Mantenimiento.
+     * Solo la conoce quien administra la app — protege que se vea la
+     * configuración de conexión (incluyendo la contraseña de la BD) y el
+     * acceso directo a Mantenimiento sin haber iniciado sesión como operador.
+     */
+    private val debugPassword = "Tas\$12345IoT."
+
+    private fun solicitarPasswordDebug() {
+        val input = android.widget.EditText(this)
+        input.inputType = android.text.InputType.TYPE_CLASS_TEXT or
+                android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+        input.hint = "Contraseña"
+
+        AlertDialog.Builder(this)
+            .setTitle("Acceso restringido")
+            .setMessage("Ingrese la contraseña de administrador para continuar.")
+            .setView(input)
+            .setPositiveButton("Aceptar") { _, _ ->
+                if (input.text.toString() == debugPassword) {
+                    mostrarInfoConexion()
+                } else {
+                    Toast.makeText(this, "Contraseña incorrecta", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun mostrarInfoConexion() {

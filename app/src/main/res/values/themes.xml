@@ -1,5 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Tema plantilla heredado (sin uso; se conserva por compatibilidad) -->
     <style name="Theme.SistemaDeParqueo" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- ===================================================== -->
+    <!--              Tema principal · Parqueo IoT             -->
+    <!-- ===================================================== -->
+    <style name="Theme.ParqueoIoT" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/brand_primary</item>
+        <item name="colorPrimaryVariant">@color/brand_primary_dark</item>
+        <item name="colorOnPrimary">@color/on_primary</item>
+
+        <item name="colorSecondary">@color/brand_primary_light</item>
+        <item name="colorSecondaryVariant">@color/brand_primary</item>
+        <item name="colorOnSecondary">@color/on_primary</item>
+
+        <item name="android:colorBackground">@color/surface_background</item>
+        <item name="colorSurface">@color/surface_card</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorError">@color/status_danger</item>
+
+        <item name="android:statusBarColor">@color/brand_primary_dark</item>
+    </style>
+
+    <!-- Overlay para el menú lateral (DrawerLayout + NavigationView) -->
+    <style name="ThemeOverlay.ParqueoIoT.Drawer" parent="ThemeOverlay.MaterialComponents.Light">
+        <item name="colorPrimary">@color/brand_primary</item>
+        <item name="colorSurface">@color/surface_card</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+    </style>
+
 </resources>

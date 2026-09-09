@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Colores de plantilla (conservados por compatibilidad) -->
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
@@ -7,4 +8,43 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- ===================================================== -->
+    <!--            Sistema de diseño · Parqueo IoT            -->
+    <!-- ===================================================== -->
+
+    <!-- Marca -->
+    <color name="brand_primary">#0D47A1</color>
+    <color name="brand_primary_dark">#09315F</color>
+    <color name="brand_primary_light">#1976D2</color>
+    <color name="on_primary">#FFFFFF</color>
+
+    <!-- Superficies -->
+    <color name="surface_background">#F5F5F5</color>
+    <color name="surface_card">#FFFFFF</color>
+    <color name="surface_muted">#E3F2FD</color>
+    <color name="divider">#E0E0E0</color>
+
+    <!-- Texto -->
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#616161</color>
+    <color name="text_hint">#9E9E9E</color>
+    <color name="text_on_primary">#FFFFFF</color>
+
+    <!-- Estados -->
+    <color name="status_success">#2E7D32</color>
+    <color name="status_success_bg">#E8F5E9</color>
+    <color name="status_danger">#C62828</color>
+    <color name="status_danger_bg">#FFEBEE</color>
+    <color name="status_warning">#EF6C00</color>
+    <color name="status_warning_bg">#FFF3E0</color>
+    <color name="status_info">#00897B</color>
+
+    <!-- Acciones (tarjetas de Home) -->
+    <color name="action_entry">#1E88E5</color>
+    <color name="action_exit">#C62828</color>
+    <color name="action_cash">#EF6C00</color>
+    <color name="action_reprint">#00897B</color>
+    <color name="action_lost_ticket">#FF6F00</color>
+    <color name="action_maintenance">#3949AB</color>
 </resources>
