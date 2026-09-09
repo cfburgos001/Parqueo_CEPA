@@ -4,88 +4,145 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:background="#F5F5F5">
+    android:background="@color/brand_primary">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp"
-        android:gravity="center">
+        android:gravity="center_horizontal"
+        android:paddingStart="@dimen/space_lg"
+        android:paddingEnd="@dimen/space_lg"
+        android:paddingTop="@dimen/space_xl"
+        android:paddingBottom="@dimen/space_lg">
 
+        <!-- Logo de la app -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="88dp"
+            android:layout_height="88dp"
+            app:cardCornerRadius="@dimen/radius_lg"
+            app:cardElevation="@dimen/elevation_card"
+            app:cardBackgroundColor="@color/surface_card">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@mipmap/ic_launcher_foreground"
+                android:scaleType="fitCenter"
+                android:contentDescription="@string/app_name" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_md"
+            android:text="@string/app_name"
+            android:textColor="@color/text_on_primary"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            android:alpha="0.75"
+            android:text="Control de acceso vehicular"
+            android:textColor="@color/text_on_primary"
+            android:textSize="@dimen/text_caption" />
+
+        <!-- Tarjeta del formulario -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="8dp"
-            android:layout_marginTop="50dp">
+            android:layout_marginTop="@dimen/space_xl"
+            app:cardCornerRadius="@dimen/radius_lg"
+            app:cardElevation="@dimen/elevation_card_raised">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="32dp">
+                android:padding="@dimen/space_lg">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
                     android:text="Iniciar sesión"
-                    android:textSize="28sp"
-                    android:textStyle="bold"
-                    android:layout_gravity="center"
-                    android:textColor="#0D47A1"
-                    android:layout_marginBottom="32dp"/>
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/text_title"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:text="Ingrese sus credenciales de operador"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_caption" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/tilUsername"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xl"
                     android:hint="Usuario"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                    android:layout_marginBottom="16dp">
+                    app:startIconDrawable="@drawable/ic_person_24"
+                    app:boxCornerRadiusTopStart="@dimen/radius_sm"
+                    app:boxCornerRadiusTopEnd="@dimen/radius_sm"
+                    app:boxCornerRadiusBottomStart="@dimen/radius_sm"
+                    app:boxCornerRadiusBottomEnd="@dimen/radius_sm">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etUsername"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text"
-                        android:maxLines="1"/>
+                        android:maxLines="1" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/tilPassword"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_md"
                     android:hint="Contraseña"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    app:startIconDrawable="@drawable/ic_lock_24"
                     app:endIconMode="password_toggle"
-                    android:layout_marginBottom="24dp">
+                    app:boxCornerRadiusTopStart="@dimen/radius_sm"
+                    app:boxCornerRadiusTopEnd="@dimen/radius_sm"
+                    app:boxCornerRadiusBottomStart="@dimen/radius_sm"
+                    app:boxCornerRadiusBottomEnd="@dimen/radius_sm">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etPassword"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="textPassword"
-                        android:maxLines="1"/>
+                        android:maxLines="1" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnLogin"
                     android:layout_width="match_parent"
-                    android:layout_height="60dp"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="@dimen/space_xl"
                     android:text="Ingresar"
-                    android:textSize="16sp"
-                    app:cornerRadius="12dp"/>
+                    android:textSize="@dimen/text_body"
+                    android:textAllCaps="false"
+                    app:cornerRadius="@dimen/radius_md" />
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="SI ha olvidado su contraseña"
-                    android:textSize="12sp"
-                    android:layout_gravity="center"
-                    android:layout_marginTop="16dp"
-                    android:textAlignment="center"
-                    android:textColor="#757575"/>
+                    android:layout_marginTop="@dimen/space_md"
+                    android:gravity="center"
+                    android:text="Si ha olvidado su contraseña, contacte al administrador"
+                    android:textColor="@color/text_hint"
+                    android:textSize="@dimen/text_caption" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
