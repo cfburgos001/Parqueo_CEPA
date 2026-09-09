@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
+    android:background="@color/surface_background"
     android:orientation="vertical">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -14,9 +14,9 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="#1976D2"
+            android:background="@color/brand_primary"
             app:title="Confirmar Salida"
-            app:titleTextColor="@android:color/white" />
+            app:titleTextColor="@color/text_on_primary" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <ScrollView
@@ -29,36 +29,35 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:padding="@dimen/space_lg">
 
             <!-- Card de Información del Vehículo -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp">
+                android:layout_marginBottom="@dimen/space_md"
+                app:cardCornerRadius="@dimen/radius_lg"
+                app:cardElevation="@dimen/elevation_card">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="20dp">
+                    android:padding="@dimen/space_md">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="16dp"
+                        android:layout_marginBottom="@dimen/space_md"
                         android:text="Información del Vehículo"
-                        android:textColor="#0D47A1"
+                        android:textColor="@color/brand_primary"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
-                    <!-- Placa -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
+                        android:layout_marginBottom="@dimen/space_sm"
                         android:orientation="horizontal">
 
                         <TextView
@@ -66,7 +65,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Placa:"
-                            android:textColor="#757575"
+                            android:textColor="@color/text_secondary"
                             android:textSize="16sp" />
 
                         <TextView
@@ -74,16 +73,15 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="ABC123"
-                            android:textColor="#212121"
+                            android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
 
-                    <!-- Hora de Entrada -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
+                        android:layout_marginBottom="@dimen/space_sm"
                         android:orientation="horizontal">
 
                         <TextView
@@ -91,7 +89,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Hora de Entrada:"
-                            android:textColor="#757575"
+                            android:textColor="@color/text_secondary"
                             android:textSize="16sp" />
 
                         <TextView
@@ -99,15 +97,14 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="04/11/2025 15:30"
-                            android:textColor="#212121"
+                            android:textColor="@color/text_primary"
                             android:textSize="16sp" />
                     </LinearLayout>
 
-                    <!-- Hora de Pago -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
+                        android:layout_marginBottom="@dimen/space_sm"
                         android:orientation="horizontal">
 
                         <TextView
@@ -115,7 +112,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Hora de Pago:"
-                            android:textColor="#757575"
+                            android:textColor="@color/text_secondary"
                             android:textSize="16sp" />
 
                         <TextView
@@ -123,16 +120,15 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="04/11/2025 16:00"
-                            android:textColor="#4CAF50"
+                            android:textColor="@color/status_success"
                             android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
 
-                    <!-- Hora de Salida -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
+                        android:layout_marginBottom="@dimen/space_sm"
                         android:orientation="horizontal">
 
                         <TextView
@@ -140,7 +136,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Hora de Salida:"
-                            android:textColor="#757575"
+                            android:textColor="@color/text_secondary"
                             android:textSize="16sp" />
 
                         <TextView
@@ -148,16 +144,15 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="17/11/2025 11:28"
-                            android:textColor="#FF9800"
+                            android:textColor="@color/status_warning"
                             android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
 
-                    <!-- Tiempo de Estancia -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
+                        android:layout_marginBottom="@dimen/space_sm"
                         android:orientation="horizontal">
 
                         <TextView
@@ -165,7 +160,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Tiempo de Estancia:"
-                            android:textColor="#757575"
+                            android:textColor="@color/text_secondary"
                             android:textSize="16sp" />
 
                         <TextView
@@ -173,12 +168,11 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="1 hora 4 min"
-                            android:textColor="#212121"
+                            android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
 
-                    <!-- Tiempo de Gracia -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -189,7 +183,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Tiempo de Gracia:"
-                            android:textColor="#757575"
+                            android:textColor="@color/text_secondary"
                             android:textSize="16sp" />
 
                         <TextView
@@ -197,7 +191,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0 hora 25 min"
-                            android:textColor="#2196F3"
+                            android:textColor="@color/brand_primary_light"
                             android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -210,25 +204,25 @@
                 android:id="@+id/cardMonto"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="#4CAF50"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp">
+                android:layout_marginBottom="@dimen/space_md"
+                app:cardBackgroundColor="@color/status_success"
+                app:cardCornerRadius="@dimen/radius_lg"
+                app:cardElevation="@dimen/elevation_card">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:orientation="vertical"
-                    android:padding="24dp">
+                    android:padding="@dimen/space_lg">
 
                     <TextView
                         android:id="@+id/tvTituloMonto"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="8dp"
+                        android:layout_marginBottom="@dimen/space_sm"
                         android:text="MONTO PAGADO"
-                        android:textColor="@android:color/white"
+                        android:textColor="@color/text_on_primary"
                         android:textSize="16sp" />
 
                     <TextView
@@ -236,22 +230,22 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="$5.00"
-                        android:textColor="@android:color/white"
+                        android:textColor="@color/text_on_primary"
                         android:textSize="48sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ⭐ NUEVO: Mensaje de Estado -->
+            <!-- Mensaje de Estado -->
             <TextView
                 android:id="@+id/tvMensajeEstado"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:padding="16dp"
+                android:layout_marginBottom="@dimen/space_md"
+                android:padding="@dimen/space_md"
                 android:text="✓ Proceda a validar la salida"
                 android:textAlignment="center"
-                android:textColor="@android:color/holo_blue_dark"
+                android:textColor="@color/brand_primary"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:visibility="gone" />
@@ -263,30 +257,32 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/white"
-        android:elevation="8dp"
+        android:background="@color/surface_card"
+        android:elevation="@dimen/elevation_card_raised"
         android:orientation="horizontal"
-        android:padding="16dp">
+        android:padding="@dimen/space_md">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnCancelar"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="0dp"
-            android:layout_height="60dp"
-            android:layout_marginEnd="8dp"
+            android:layout_height="56dp"
+            android:layout_marginEnd="@dimen/space_sm"
             android:layout_weight="1"
             android:text="Cancelar"
-            android:textSize="16sp"
-            app:cornerRadius="12dp" />
+            android:textAllCaps="false"
+            android:textSize="@dimen/text_body"
+            app:cornerRadius="@dimen/radius_md" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnConfirmar"
             android:layout_width="0dp"
-            android:layout_height="60dp"
-            android:layout_marginStart="8dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="@dimen/space_sm"
             android:layout_weight="1"
-            android:text="VALIDAR"
-            android:textSize="16sp"
-            app:cornerRadius="12dp" />
+            android:text="Validar"
+            android:textAllCaps="false"
+            android:textSize="@dimen/text_body"
+            app:cornerRadius="@dimen/radius_md" />
     </LinearLayout>
 </LinearLayout>
