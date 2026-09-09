@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import com.cepa.parqueo.database.DispositivoManager
@@ -22,7 +21,7 @@ import java.util.Date
  * Activity para registrar salida de vehículos
  * VERSIÓN 4: Usuario CAJA solo procesa pagos, NO abre pluma
  */
-class SalidaVehiculoActivity : AppCompatActivity() {
+class SalidaVehiculoActivity : DrawerActivity() {
 
     private lateinit var binding: ActivitySalidaVehiculoBinding
     private lateinit var vehiculoRepository: VehiculoRepository
@@ -38,7 +37,7 @@ class SalidaVehiculoActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySalidaVehiculoBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContentViewWithDrawer(binding.root, R.id.nav_salida)
 
         vehiculoRepository = VehiculoRepository(this)
         dispositivoManager = DispositivoManager(this)
@@ -135,8 +134,6 @@ class SalidaVehiculoActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = if (tipoUsuario == "CAJA") "Procesar Pago" else "Registro de Salida"
 
         binding.btnRegistrarPorPlaca.setOnClickListener {
@@ -587,11 +584,6 @@ class SalidaVehiculoActivity : AppCompatActivity() {
         } else {
             super.onActivityResult(requestCode, resultCode, data)
         }
-    }
-
-    override fun onSupportNavigateUp(): Boolean {
-        onBackPressed()
-        return true
     }
 
     companion object {

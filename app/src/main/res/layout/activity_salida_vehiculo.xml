@@ -4,20 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F5F5F5">
-
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:title="Registro de Salida"
-            app:titleTextColor="@android:color/white"
-            android:background="#1976D2"/>
-    </com.google.android.material.appbar.AppBarLayout>
+    android:background="@color/surface_background">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -28,17 +15,17 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:padding="@dimen/space_lg">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Opciones para registrar la salida del vehículo."
-                android:textSize="16sp"
+                android:textSize="@dimen/text_body"
                 android:textAlignment="center"
-                android:textColor="#212121"
+                android:textColor="@color/text_primary"
                 android:layout_gravity="center"
-                android:layout_marginBottom="32dp"/>
+                android:layout_marginBottom="@dimen/space_xl" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilPlaca"
@@ -46,7 +33,11 @@
                 android:layout_height="wrap_content"
                 android:hint="Ingresar Placa"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_marginBottom="16dp">
+                app:boxCornerRadiusTopStart="@dimen/radius_sm"
+                app:boxCornerRadiusTopEnd="@dimen/radius_sm"
+                app:boxCornerRadiusBottomStart="@dimen/radius_sm"
+                app:boxCornerRadiusBottomEnd="@dimen/radius_sm"
+                android:layout_marginBottom="@dimen/space_md">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etPlaca"
@@ -55,50 +46,52 @@
                     android:inputType="textCapCharacters"
                     android:maxLines="1"
                     android:textSize="20sp"
-                    android:textStyle="bold"/>
+                    android:textStyle="bold" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnRegistrarPorPlaca"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
+                android:layout_height="56dp"
                 android:text="Registrar Salida por Placa"
-                android:textSize="16sp"
-                app:cornerRadius="12dp"
-                android:layout_marginBottom="24dp"/>
+                android:textAllCaps="false"
+                android:textSize="@dimen/text_body"
+                app:cornerRadius="@dimen/radius_md"
+                android:layout_marginBottom="@dimen/space_lg" />
 
             <TextView
-                android:layout_width="22dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginBottom="24dp"
+                android:layout_marginBottom="@dimen/space_lg"
                 android:text="O"
-                android:textColor="#212121"
+                android:textColor="@color/text_secondary"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnEscanearQR"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:text="Escanear Código de Barras o QR"
-                android:textSize="16sp"
-                app:cornerRadius="12dp"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_marginBottom="32dp"/>
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Escanear Código de Barras o QR"
+                android:textAllCaps="false"
+                android:textSize="@dimen/text_body"
+                app:cornerRadius="@dimen/radius_md"
+                android:layout_marginBottom="@dimen/space_xl" />
 
             <!-- Botón de Pago Sin Cobro (solo visible para CAJA) -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSalidaSinCobro"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:text="🎁 Registrar Pago Sin Cobro"
-                android:textSize="16sp"
-                app:cornerRadius="12dp"
-                app:backgroundTint="#9C27B0"
+                android:layout_height="56dp"
+                android:text="Registrar Pago Sin Cobro"
+                android:textAllCaps="false"
+                android:textSize="@dimen/text_body"
+                app:cornerRadius="@dimen/radius_md"
+                app:backgroundTint="@color/status_info"
                 android:visibility="gone"
-                android:layout_marginTop="16dp"/>
-
+                android:layout_marginTop="@dimen/space_md" />
 
             <!-- Texto informativo para el botón de cortesía -->
             <TextView
@@ -106,25 +99,23 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Para proveedores y visitas. Solo marca como pagado.\nEl operador debe validar la salida."
-                android:textSize="12sp"
+                android:textSize="@dimen/text_caption"
                 android:textAlignment="center"
-                android:textColor="#757575"
+                android:textColor="@color/text_secondary"
                 android:visibility="gone"
-                android:layout_marginTop="8dp"/>
+                android:layout_marginTop="@dimen/space_sm" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnAperturaManualSalida"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginTop="12dp"
-                android:text="🔓 APERTURA MANUAL DE BARRERA"
-                android:textSize="14sp"
-                android:textColor="@android:color/white"
-                app:backgroundTint="#FF6F00"
-                app:cornerRadius="8dp" />
-
+                android:layout_marginTop="@dimen/space_md"
+                android:text="Apertura Manual de Barrera"
+                android:textAllCaps="false"
+                android:textSize="@dimen/text_body"
+                android:textColor="@color/text_on_primary"
+                app:backgroundTint="@color/status_warning"
+                app:cornerRadius="@dimen/radius_sm" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

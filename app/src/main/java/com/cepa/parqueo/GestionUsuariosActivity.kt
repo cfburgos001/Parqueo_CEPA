@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -12,7 +11,7 @@ import com.cepa.parqueo.database.*
 import com.cepa.parqueo.databinding.ActivityGestionUsuariosBinding
 import kotlinx.coroutines.launch
 
-class GestionUsuariosActivity : AppCompatActivity() {
+class GestionUsuariosActivity : DrawerActivity() {
 
     private lateinit var binding: ActivityGestionUsuariosBinding
     private lateinit var operadorRepository: OperadorRepository
@@ -21,7 +20,7 @@ class GestionUsuariosActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityGestionUsuariosBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContentViewWithDrawer(binding.root, R.id.nav_mantenimiento)
 
         operadorRepository = OperadorRepository(this)
 
@@ -30,8 +29,6 @@ class GestionUsuariosActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "Gestión de Usuarios"
 
         // RecyclerView
@@ -136,10 +133,6 @@ class GestionUsuariosActivity : AppCompatActivity() {
         }
     }
 
-    override fun onSupportNavigateUp(): Boolean {
-        onBackPressed()
-        return true
-    }
 }
 
 // Adapter para RecyclerView
