@@ -4,22 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F5F5F5">
+    android:background="@color/surface_background">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:title="Registro de Entrada"
-            app:titleTextColor="@android:color/white"
-            android:background="#1976D2"/>
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <!-- ⭐ ProgressBar para validación de apertura -->
+    <!-- ProgressBar para validación de apertura -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -29,8 +16,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginVertical="16dp"
-            android:visibility="gone"/>
+            android:layout_marginVertical="@dimen/space_md"
+            android:indeterminateTint="@color/brand_primary"
+            android:visibility="gone" />
     </FrameLayout>
 
     <ScrollView
@@ -42,41 +30,40 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp"
-            android:gravity="center">
+            android:padding="@dimen/space_lg">
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="32dp"
+                android:layout_marginBottom="@dimen/space_xl"
                 android:text="Ingrese la placa del vehículo y seleccione el tipo para registrar la entrada."
                 android:textAlignment="center"
-                android:textColor="#212121"
-                android:textSize="16sp" />
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_body" />
 
             <!-- Selector de Tipo de Vehículo -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp"
-                app:cardBackgroundColor="#E3F2FD">
+                android:layout_marginBottom="@dimen/space_md"
+                app:cardCornerRadius="@dimen/radius_md"
+                app:cardElevation="@dimen/elevation_card"
+                app:cardBackgroundColor="@color/surface_muted">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="@dimen/space_md">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/space_sm"
                         android:text="Tipo de Vehículo"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="#1976D2"
-                        android:layout_marginBottom="8dp"/>
+                        android:textColor="@color/brand_primary"
+                        android:textSize="@dimen/text_body"
+                        android:textStyle="bold" />
 
                     <Spinner
                         android:id="@+id/spinnerTipoVehiculo"
@@ -84,17 +71,17 @@
                         android:layout_height="50dp"
                         android:background="@android:drawable/btn_dropdown"
                         android:padding="12dp"
-                        android:spinnerMode="dropdown"/>
+                        android:spinnerMode="dropdown" />
 
                     <TextView
                         android:id="@+id/tvInfoTarifa"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="@dimen/space_sm"
                         android:text="Cargando tarifas..."
-                        android:textSize="12sp"
-                        android:textColor="#757575"
-                        android:visibility="gone"/>
+                        android:textColor="@color/text_secondary"
+                        android:textSize="@dimen/text_caption"
+                        android:visibility="gone" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -102,9 +89,13 @@
                 android:id="@+id/tilPlaca"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/space_lg"
                 android:hint="Placa del Vehículo"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_marginBottom="24dp">
+                app:boxCornerRadiusTopStart="@dimen/radius_sm"
+                app:boxCornerRadiusTopEnd="@dimen/radius_sm"
+                app:boxCornerRadiusBottomStart="@dimen/radius_sm"
+                app:boxCornerRadiusBottomEnd="@dimen/radius_sm">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etPlaca"
@@ -119,44 +110,45 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnRegistrarEntrada"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
+                android:layout_height="56dp"
+                android:layout_marginBottom="@dimen/space_md"
                 android:text="Registrar Entrada e Imprimir Recibo"
-                android:textSize="16sp"
-                app:cornerRadius="12dp"
-                android:layout_marginBottom="16dp"/>
+                android:textAllCaps="false"
+                android:textSize="@dimen/text_body"
+                app:cornerRadius="@dimen/radius_md" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnReimprimir"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:text="🖨️ Reimprimir Último Ticket"
-                android:textSize="16sp"
-                app:cornerRadius="12dp"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                app:icon="@android:drawable/ic_menu_rotate"
-                app:iconGravity="textStart"/>
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Reimprimir Último Ticket"
+                android:textAllCaps="false"
+                android:textSize="@dimen/text_body"
+                app:cornerRadius="@dimen/radius_md"
+                app:icon="@drawable/ic_print_24"
+                app:iconGravity="textStart" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnAperturaManualEntrada"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginTop="12dp"
-                android:text="🔓 APERTURA MANUAL DE BARRERA"
-                android:textSize="14sp"
-                android:textColor="@android:color/white"
-                app:backgroundTint="#FF6F00"
-                app:cornerRadius="8dp" />
+                android:layout_marginTop="@dimen/space_md"
+                android:text="Apertura Manual de Barrera"
+                android:textAllCaps="false"
+                android:textColor="@color/text_on_primary"
+                android:textSize="@dimen/text_body"
+                app:backgroundTint="@color/status_warning"
+                app:cornerRadius="@dimen/radius_sm" />
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="💡 Use este botón si necesita imprimir nuevamente el último ticket generado"
-                android:textSize="12sp"
-                android:textColor="#757575"
+                android:layout_marginTop="@dimen/space_sm"
+                android:text="Use este botón si necesita imprimir nuevamente el último ticket generado"
                 android:textAlignment="center"
-                android:layout_marginTop="8dp"/>
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_caption" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

@@ -127,7 +127,12 @@ abstract class DrawerActivity : AppCompatActivity() {
             else -> return
         }
         if (target == this::class.java) return
-        startActivity(Intent(this, target).putExtra("USER_TYPE", userType.name))
+        val intent = Intent(this, target).putExtra("USER_TYPE", userType.name)
+        if (itemId == R.id.nav_dashboard) {
+            // Volver al Home que ya está en la pila, sin apilar otro.
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+        startActivity(intent)
         finish()   // no apilar pantallas al moverse entre secciones con el drawer
     }
 

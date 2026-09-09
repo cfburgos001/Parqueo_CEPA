@@ -5,7 +5,6 @@ import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import com.cepa.parqueo.database.DatabaseResult
@@ -22,7 +21,7 @@ import java.util.Date
 /**
  * VERSIÓN 3: Con validación de apertura de caja
  */
-class IngresoVehiculoActivity : AppCompatActivity() {
+class IngresoVehiculoActivity : DrawerActivity() {
 
     private lateinit var binding: ActivityIngresoVehiculoBinding
     private lateinit var vehiculoRepository: VehiculoRepository
@@ -40,7 +39,7 @@ class IngresoVehiculoActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityIngresoVehiculoBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContentViewWithDrawer(binding.root, R.id.nav_ingreso)
 
         vehiculoRepository = VehiculoRepository(this)
         dispositivoManager = DispositivoManager(this)
@@ -206,8 +205,6 @@ class IngresoVehiculoActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "Registro de Entrada"
 
         binding.etPlaca.addTextChangedListener {
@@ -388,10 +385,5 @@ class IngresoVehiculoActivity : AppCompatActivity() {
                 ).show()
             }
         }
-    }
-
-    override fun onSupportNavigateUp(): Boolean {
-        onBackPressed()
-        return true
     }
 }
