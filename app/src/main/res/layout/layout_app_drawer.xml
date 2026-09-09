@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.drawerlayout.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/drawer_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+    <!-- Contenido de la pantalla -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@color/surface_background">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/drawer_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/brand_primary"
+            android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar"
+            app:title="@string/app_name"
+            app:titleTextColor="@color/text_on_primary" />
+
+        <!-- Aquí DrawerActivity coloca el layout propio de cada pantalla -->
+        <FrameLayout
+            android:id="@+id/drawer_content_frame"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+    </LinearLayout>
+
+    <!-- Menú lateral -->
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/drawer_navigation"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:fitsSystemWindows="true"
+        android:theme="@style/ThemeOverlay.ParqueoIoT.Drawer"
+        app:headerLayout="@layout/nav_header"
+        app:menu="@menu/drawer_menu"
+        app:itemIconTint="@color/brand_primary"
+        app:itemTextColor="@color/text_primary" />
+</androidx.drawerlayout.widget.DrawerLayout>

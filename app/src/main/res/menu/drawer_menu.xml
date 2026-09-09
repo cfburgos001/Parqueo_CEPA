@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_dashboard"
+            android:icon="@drawable/ic_dashboard_24"
+            android:title="Dashboard" />
+        <item
+            android:id="@+id/nav_ingreso"
+            android:icon="@drawable/ic_car_entry_24"
+            android:title="Ingreso de Vehículo" />
+        <item
+            android:id="@+id/nav_salida"
+            android:icon="@drawable/ic_car_exit_24"
+            android:title="Salida de Vehículo" />
+        <item
+            android:id="@+id/nav_apertura_cierre"
+            android:icon="@drawable/ic_wallet_24"
+            android:title="Apertura / Cierre de Turno" />
+        <item
+            android:id="@+id/nav_reimpresion"
+            android:icon="@drawable/ic_print_24"
+            android:title="Reimpresión" />
+        <item
+            android:id="@+id/nav_ticket_perdido"
+            android:icon="@drawable/ic_ticket_24"
+            android:title="Ticket Extraviado" />
+        <item
+            android:id="@+id/nav_mantenimiento"
+            android:icon="@drawable/ic_settings"
+            android:title="Mantenimiento" />
+    </group>
+
+    <item android:title="">
+        <menu>
+            <item
+                android:id="@+id/nav_cerrar_sesion"
+                android:icon="@drawable/ic_logout_24"
+                android:title="Cerrar Sesión" />
+        </menu>
+    </item>
+</menu>

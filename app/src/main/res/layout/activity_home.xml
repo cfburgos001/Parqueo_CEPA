@@ -1,280 +1,306 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5">
+    android:fillViewport="true"
+    android:background="@color/surface_background">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/space_sm">
 
-        <TextView
-            android:id="@+id/tvWelcome"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Bienvenido, admin"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="#0D47A1"
-            android:layout_marginBottom="8dp"/>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnCerrarSesion"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Cerrar sesión"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:textColor="#1976D2"
-            android:layout_marginBottom="24dp"/>
-
-        <!-- ⭐ Envuelto en ScrollView: con 5 tarjetas ya no cabe todo en pantallas
-             pequeñas como la del handheld ZKH300 sin poder desplazar. -->
-        <ScrollView
+        <!-- Saludo -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:fillViewport="true">
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/space_xs"
+            app:cardCornerRadius="@dimen/radius_lg"
+            app:cardElevation="@dimen/elevation_card"
+            app:cardBackgroundColor="@color/surface_card">
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/space_md">
+
+                <TextView
+                    android:id="@+id/tvWelcome"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Bienvenido"
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/text_title"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvUserRole"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:text="Rol:"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_caption" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Fila 1: Ingreso / Salida -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center">
+            android:orientation="horizontal">
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/btnIngresoVehiculo"
-                android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/card_action_height"
+                android:layout_weight="1"
+                android:layout_margin="@dimen/space_xs"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?android:attr/selectableItemBackground"
-                app:cardBackgroundColor="#1E88E5">
+                app:cardBackgroundColor="@color/action_entry"
+                app:cardCornerRadius="@dimen/radius_lg"
+                app:cardElevation="@dimen/elevation_card">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical"
                     android:gravity="center"
-                    android:padding="16dp">
+                    android:padding="@dimen/space_sm">
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:src="@drawable/ic_car_entry_24"
+                        app:tint="@color/on_primary"
+                        android:contentDescription="@null" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🚘"
-                        android:textSize="40sp"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Ingresar Vehículo (Entrada)"
-                        android:textSize="18sp"
+                        android:layout_marginTop="@dimen/space_sm"
+                        android:text="Ingreso de Vehículo"
+                        android:textColor="@color/text_on_primary"
+                        android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="@android:color/white"
-                        android:layout_marginTop="8dp"/>
+                        android:gravity="center" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/btnSalidaVehiculo"
-                android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/card_action_height"
+                android:layout_weight="1"
+                android:layout_margin="@dimen/space_xs"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?android:attr/selectableItemBackground"
-                app:cardBackgroundColor="#D32F2F">
+                app:cardBackgroundColor="@color/action_exit"
+                app:cardCornerRadius="@dimen/radius_lg"
+                app:cardElevation="@dimen/elevation_card">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical"
                     android:gravity="center"
-                    android:padding="16dp">
+                    android:padding="@dimen/space_sm">
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:src="@drawable/ic_car_exit_24"
+                        app:tint="@color/on_primary"
+                        android:contentDescription="@null" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🚐"
-                        android:textSize="40sp"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Salida Vehículo (Salida)"
-                        android:textSize="18sp"
+                        android:layout_marginTop="@dimen/space_sm"
+                        android:text="Salida de Vehículo"
+                        android:textColor="@color/text_on_primary"
+                        android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="@android:color/white"
-                        android:layout_marginTop="8dp"/>
+                        android:gravity="center" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
 
-            <!-- ⭐ NUEVO BOTÓN: Apertura/Cierre de Caja -->
+        <!-- Fila 2: Apertura/Cierre / Reimpresión -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/btnAperturaCierre"
-                android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/card_action_height"
+                android:layout_weight="1"
+                android:layout_margin="@dimen/space_xs"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?android:attr/selectableItemBackground"
-                app:cardBackgroundColor="#FF9800">
+                app:cardBackgroundColor="@color/action_cash"
+                app:cardCornerRadius="@dimen/radius_lg"
+                app:cardElevation="@dimen/elevation_card">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical"
                     android:gravity="center"
-                    android:padding="16dp">
+                    android:padding="@dimen/space_sm">
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:src="@drawable/ic_wallet_24"
+                        app:tint="@color/on_primary"
+                        android:contentDescription="@null" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="💰"
-                        android:textSize="40sp"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Apertura / Cierre de Caja"
-                        android:textSize="18sp"
+                        android:layout_marginTop="@dimen/space_sm"
+                        android:text="Apertura / Cierre de Turno"
+                        android:textColor="@color/text_on_primary"
+                        android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textAlignment="center"
-                        android:textColor="@android:color/white"
-                        android:layout_marginTop="8dp"/>
+                        android:gravity="center" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ⭐ NUEVO BOTÓN: Reimpresión de Ticket / Factura -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/btnReimpresion"
-                android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/card_action_height"
+                android:layout_weight="1"
+                android:layout_margin="@dimen/space_xs"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?android:attr/selectableItemBackground"
-                app:cardBackgroundColor="#00897B">
+                app:cardBackgroundColor="@color/action_reprint"
+                app:cardCornerRadius="@dimen/radius_lg"
+                app:cardElevation="@dimen/elevation_card">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical"
                     android:gravity="center"
-                    android:padding="16dp">
+                    android:padding="@dimen/space_sm">
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:src="@drawable/ic_print_24"
+                        app:tint="@color/on_primary"
+                        android:contentDescription="@null" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🖨️"
-                        android:textSize="40sp"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Reimpresión (Ticket / Factura)"
-                        android:textSize="18sp"
+                        android:layout_marginTop="@dimen/space_sm"
+                        android:text="Reimpresión"
+                        android:textColor="@color/text_on_primary"
+                        android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textAlignment="center"
-                        android:textColor="@android:color/white"
-                        android:layout_marginTop="8dp"/>
+                        android:gravity="center" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
 
-            <!-- ⭐ NUEVO BOTÓN: Ticket Extraviado -->
+        <!-- Fila 3: Ticket Extraviado / Mantenimiento -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/btnTicketPerdido"
-                android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/card_action_height"
+                android:layout_weight="1"
+                android:layout_margin="@dimen/space_xs"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?android:attr/selectableItemBackground"
-                app:cardBackgroundColor="#EF6C00">
+                app:cardBackgroundColor="@color/action_lost_ticket"
+                app:cardCornerRadius="@dimen/radius_lg"
+                app:cardElevation="@dimen/elevation_card">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical"
                     android:gravity="center"
-                    android:padding="16dp">
+                    android:padding="@dimen/space_sm">
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:src="@drawable/ic_ticket_24"
+                        app:tint="@color/on_primary"
+                        android:contentDescription="@null" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🎫"
-                        android:textSize="40sp"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_sm"
                         android:text="Ticket Extraviado"
-                        android:textSize="18sp"
+                        android:textColor="@color/text_on_primary"
+                        android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="@android:color/white"
-                        android:layout_marginTop="8dp"/>
+                        android:gravity="center" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/btnMantenimiento"
-                android:layout_width="match_parent"
-                android:layout_height="120dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/card_action_height"
+                android:layout_weight="1"
+                android:layout_margin="@dimen/space_xs"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?android:attr/selectableItemBackground"
-                app:cardBackgroundColor="#3949AB">
+                app:cardBackgroundColor="@color/action_maintenance"
+                app:cardCornerRadius="@dimen/radius_lg"
+                app:cardElevation="@dimen/elevation_card">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical"
                     android:gravity="center"
-                    android:padding="16dp">
+                    android:padding="@dimen/space_sm">
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:src="@drawable/ic_settings"
+                        app:tint="@color/on_primary"
+                        android:contentDescription="@null" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🔧"
-                        android:textSize="40sp"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_sm"
                         android:text="Mantenimiento"
-                        android:textSize="18sp"
+                        android:textColor="@color/text_on_primary"
+                        android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="@android:color/white"
-                        android:layout_marginTop="8dp"/>
+                        android:gravity="center" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
-        </ScrollView>
+
     </LinearLayout>
-
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNavigation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        app:menu="@menu/bottom_nav_menu"
-        app:labelVisibilityMode="labeled"
-        android:background="@android:color/white"/>
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</ScrollView>

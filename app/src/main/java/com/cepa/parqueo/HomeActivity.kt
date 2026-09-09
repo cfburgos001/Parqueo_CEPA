@@ -4,34 +4,36 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.GravityCompat
 import com.cepa.parqueo.databinding.ActivityHomeBinding
 
-class HomeActivity : AppCompatActivity() {
+class HomeActivity : DrawerActivity() {
 
     private lateinit var binding: ActivityHomeBinding
     private lateinit var username: String
-    private lateinit var userType: UserType
+    private lateinit var currentUserType: UserType
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityHomeBinding.inflate(layoutInflater)
-        setContentView(binding.root)
 
         username = intent.getStringExtra("USERNAME") ?: "Usuario"
         val userTypeString = intent.getStringExtra("USER_TYPE") ?: "OPERADOR"
-        userType = UserType.valueOf(userTypeString)
+        currentUserType = UserType.valueOf(userTypeString)
+
+        setContentViewWithDrawer(binding.root, R.id.nav_dashboard)
+        supportActionBar?.subtitle = com.cepa.parqueo.database.SiteConfigCache.nombreComercial()
 
         setupUI()
-        setupBottomNavigation()
         applyPermissions()
     }
 
     private fun setupUI() {
         binding.tvWelcome.text = "Bienvenido, $username"
+        binding.tvUserRole.text = "Rol: ${currentUserType.name}"
 
         binding.btnIngresoVehiculo.setOnClickListener {
-            if (userType.canAccessEntry()) {
+            if (currentUserType.canAccessEntry()) {
                 startActivity(Intent(this, IngresoVehiculoActivity::class.java))
             } else {
                 showNoPermissionDialog()
@@ -39,10 +41,10 @@ class HomeActivity : AppCompatActivity() {
         }
 
         binding.btnSalidaVehiculo.setOnClickListener {
-            if (userType.canAccessExit()) {
+            if (currentUserType.canAccessExit()) {
                 // Pasar el tipo de usuario a SalidaVehiculoActivity
                 val intent = Intent(this, SalidaVehiculoActivity::class.java)
-                intent.putExtra("USER_TYPE", userType.name)
+                intent.putExtra("USER_TYPE", currentUserType.name)
                 startActivity(intent)
             } else {
                 showNoPermissionDialog()
@@ -55,7 +57,7 @@ class HomeActivity : AppCompatActivity() {
         }
 
         binding.btnMantenimiento.setOnClickListener {
-            if (userType.canAccessMaintenance()) {
+            if (currentUserType.canAccessMaintenance()) {
                 startActivity(Intent(this, MantenimientoActivity::class.java))
             } else {
                 showNoPermissionDialog()
@@ -72,68 +74,35 @@ class HomeActivity : AppCompatActivity() {
         binding.btnTicketPerdido.setOnClickListener {
             startActivity(Intent(this, TicketPerdidoActivity::class.java))
         }
-
-        binding.btnCerrarSesion.setOnClickListener {
-            showLogoutDialog()
-        }
     }
 
     private fun applyPermissions() {
         // Ocultar Mantenimiento si no es ADMINISTRADOR
-        if (!userType.canAccessMaintenance()) {
+        if (!currentUserType.canAccessMaintenance()) {
             binding.btnMantenimiento.visibility = View.GONE
         }
 
         //  Si es CAJA, ocultar botón de Ingreso
-        if (!userType.canAccessEntry()) {
+        if (!currentUserType.canAccessEntry()) {
             binding.btnIngresoVehiculo.visibility = View.GONE
         }
     }
 
-    private fun setupBottomNavigation() {
-        binding.bottomNavigation.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_ingreso -> {
-                    if (userType.canAccessEntry()) {
-                        startActivity(Intent(this, IngresoVehiculoActivity::class.java))
-                    } else {
-                        showNoPermissionDialog()
-                    }
-                    true
-                }
-                R.id.nav_salida -> {
-                    if (userType.canAccessExit()) {
-                        val intent = Intent(this, SalidaVehiculoActivity::class.java)
-                        intent.putExtra("USER_TYPE", userType.name)
-                        startActivity(intent)
-                    } else {
-                        showNoPermissionDialog()
-                    }
-                    true
-                }
-                R.id.nav_mantenimiento -> {
-                    if (userType.canAccessMaintenance()) {
-                        startActivity(Intent(this, MantenimientoActivity::class.java))
-                    } else {
-                        showNoPermissionDialog()
-                    }
-                    true
-                }
-                R.id.nav_home -> true
-                else -> false
-            }
-        }
-
-        binding.bottomNavigation.selectedItemId = R.id.nav_home
-
-        // Ocultar opciones del menú inferior según permisos
-        if (!userType.canAccessMaintenance()) {
-            binding.bottomNavigation.menu.removeItem(R.id.nav_mantenimiento)
-        }
-
-        // NUEVO: Si es CAJA, ocultar opción de Ingreso del menú inferior
-        if (!userType.canAccessEntry()) {
-            binding.bottomNavigation.menu.removeItem(R.id.nav_ingreso)
+    /**
+     * El menú lateral reutiliza EXACTAMENTE la acción de cada botón (mismos
+     * intents, extras, chequeos de permiso y diálogos). Home es la pantalla
+     * raíz: aquí NO se hace finish() al navegar.
+     */
+    override fun onDrawerItemSelected(itemId: Int) {
+        when (itemId) {
+            R.id.nav_dashboard -> { /* ya estamos en Home */ }
+            R.id.nav_ingreso -> binding.btnIngresoVehiculo.performClick()
+            R.id.nav_salida -> binding.btnSalidaVehiculo.performClick()
+            R.id.nav_apertura_cierre -> binding.btnAperturaCierre.performClick()
+            R.id.nav_reimpresion -> binding.btnReimpresion.performClick()
+            R.id.nav_ticket_perdido -> binding.btnTicketPerdido.performClick()
+            R.id.nav_mantenimiento -> binding.btnMantenimiento.performClick()
+            R.id.nav_cerrar_sesion -> showLogoutDialog()
         }
     }
 
@@ -174,6 +143,10 @@ class HomeActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        showLogoutDialog()
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START)
+        } else {
+            showLogoutDialog()
+        }
     }
 }
